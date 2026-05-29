@@ -42,8 +42,9 @@ async function validarSessaoExistente() {
     const res = await fetch(`${API_URL}/me`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+
     if (res.ok) {
-      const data = await res.json(); // ← correção: faltava chamar .json()
+      const data = await res.json();
       if (data.role === "admin") {
         window.location.href = "admin.html";
       } else {
