@@ -38,16 +38,16 @@ O objetivo principal é automatizar o processo de verificação visual de telas 
 ### Screenshots das Interfaces
 
 #### Tela de Login
-![Login]([https://via.placeholder.com/400x300?text=Tela+de+Login](https://i.postimg.cc/vZdsNNcq/Telade-Login.jpg))
+[![Telade-Login.jpg](https://i.postimg.cc/vZdsNNcq/Telade-Login.jpg)](https://postimg.cc/MvtNct0V)
 
 #### Dashboard Administrativo
-![Dashboard Admin](https://via.placeholder.com/400x300?text=Dashboard+Admin)
+[![Dashboard-ADM.jpg](https://i.postimg.cc/y6yYcRnk/Dashboard-ADM.jpg)](https://postimg.cc/fkkNhJGN)
 
 #### Validação de Screenshots
-![Validação](https://via.placeholder.com/400x300?text=Validacao+de+Screenshots)
+[![Valid-Screenshots.jpg](https://i.postimg.cc/Njf4BRCV/Valid-Screenshots.jpg)](https://postimg.cc/tYwPznjt)
 
 #### Minhas Estatísticas
-![Estatísticas](https://via.placeholder.com/400x300?text=Minhas+Estatisticas)
+[![Estatisticas.jpg](https://i.postimg.cc/PrfZwTbG/Estatisticas.jpg)](https://postimg.cc/xq7crrFg)
 
 ---
 
