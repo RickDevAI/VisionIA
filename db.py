@@ -1,14 +1,28 @@
+"""
+db.py — camada de abstração de banco de dados.
+ 
+- Sem TURSO_URL: SQLite local (desenvolvimento)
+- Com TURSO_URL + TURSO_TOKEN: Turso via HTTP REST (produção)
+  Usa a API HTTP do Turso em vez de WebSocket — mais estável em produção.
+"""
+ 
 import os
 import sqlite3 as _sqlite3
+import json
+import urllib.request
+import urllib.error
  
-TURSO_URL   = os.getenv("TURSO_URL", "")
+TURSO_URL   = os.getenv("TURSO_URL", "").rstrip("/")
 TURSO_TOKEN = os.getenv("TURSO_TOKEN", "")
 DB_PATH     = os.getenv("DB_PATH", "usuarios.db")
  
 _USANDO_TURSO = bool(TURSO_URL and TURSO_TOKEN)
  
-if _USANDO_TURSO:
-    import libsql_client
+# Converte URL libsql:// para https://
+if _USANDO_TURSO and TURSO_URL.startswith("libsql://"):
+    _HTTP_URL = "https://" + TURSO_URL[len("libsql://"):]
+else:
+    _HTTP_URL = TURSO_URL
  
  
 class Row(dict):
@@ -20,22 +34,52 @@ class Row(dict):
  
  
 class TursoConnection:
-    def __init__(self, client):
-        self._client = client
-        import asyncio
-        self._loop = asyncio.new_event_loop()
+    """Conexão com Turso via HTTP REST API."""
  
-    def _run(self, coro):
-        return self._loop.run_until_complete(coro)
+    def __init__(self):
+        self._url = f"{_HTTP_URL}/v2/pipeline"
+        self._headers = {
+            "Authorization": f"Bearer {TURSO_TOKEN}",
+            "Content-Type": "application/json",
+        }
+ 
+    def _http_execute(self, sql, params=()):
+        """Executa um statement via HTTP e retorna o resultado."""
+        stmt = {"type": "execute", "stmt": {"sql": sql}}
+        if params:
+            stmt["stmt"]["args"] = [
+                {"type": "text", "value": str(p)} if isinstance(p, str)
+                else {"type": "integer", "value": p} if isinstance(p, int)
+                else {"type": "float", "value": p} if isinstance(p, float)
+                else {"type": "null"} if p is None
+                else {"type": "text", "value": str(p)}
+                for p in params
+            ]
+ 
+        payload = json.dumps({"requests": [stmt, {"type": "close"}]}).encode()
+        req = urllib.request.Request(self._url, data=payload, headers=self._headers, method="POST")
+ 
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            body = e.read().decode()
+            raise RuntimeError(f"Turso HTTP {e.code}: {body}")
+ 
+        result = data["results"][0]
+        if result["type"] == "error":
+            raise RuntimeError(f"Turso error: {result['error']['message']}")
+ 
+        return result["response"]["result"]
  
     def execute(self, sql, params=()):
-        rs = self._run(self._client.execute(sql, list(params)))
-        return TursoCursor(rs)
+        result = self._http_execute(sql, params)
+        return TursoCursor(result)
  
     def executescript(self, sql):
         stmts = [s.strip() for s in sql.split(";") if s.strip()]
         for stmt in stmts:
-            self._run(self._client.execute(stmt))
+            self._http_execute(stmt)
         return self
  
     def cursor(self):
@@ -45,17 +89,7 @@ class TursoConnection:
         pass  # Turso auto-commita
  
     def close(self):
-        # Fecha o cliente de forma segura, ignorando erros de loop fechado
-        try:
-            if not self._loop.is_closed():
-                self._loop.run_until_complete(self._client.close())
-        except Exception:
-            pass
-        try:
-            if not self._loop.is_closed():
-                self._loop.close()
-        except Exception:
-            pass
+        pass  # HTTP é stateless, nada a fechar
  
     @property
     def total_changes(self):
@@ -63,11 +97,14 @@ class TursoConnection:
  
  
 class TursoCursor:
-    def __init__(self, result_set):
-        cols = [c.name for c in result_set.columns] if result_set.columns else []
-        self._rows = [Row(zip(cols, row)) for row in result_set.rows]
-        self.rowcount = getattr(result_set, "rows_affected", len(self._rows))
-        self.lastrowid = getattr(result_set, "last_insert_rowid", None)
+    def __init__(self, result):
+        cols = [c["name"] for c in result.get("cols", [])]
+        self._rows = [
+            Row(zip(cols, [_parse_val(v) for v in row]))
+            for row in result.get("rows", [])
+        ]
+        self.rowcount  = result.get("affected_row_count", len(self._rows))
+        self.lastrowid = result.get("last_insert_rowid")
  
     def fetchone(self):
         return self._rows[0] if self._rows else None
@@ -81,7 +118,7 @@ class TursoCursor:
  
 class TursoDirectCursor:
     def __init__(self, conn):
-        self._conn = conn
+        self._conn   = conn
         self._cursor = None
  
     def execute(self, sql, params=()):
@@ -102,18 +139,23 @@ class TursoDirectCursor:
         return self._cursor.rowcount if self._cursor else 0
  
  
+def _parse_val(v):
+    """Converte valor do formato Turso para Python."""
+    if v is None or (isinstance(v, dict) and v.get("type") == "null"):
+        return None
+    if isinstance(v, dict):
+        t = v.get("type", "text")
+        val = v.get("value")
+        if t == "integer": return int(val) if val is not None else None
+        if t == "float":   return float(val) if val is not None else None
+        return val
+    return v
+ 
+ 
 def conectar():
-    """
-    Retorna conexão com o banco.
-    - Com TURSO_URL + TURSO_TOKEN: usa Turso (produção)
-    - Sem elas: usa SQLite local (desenvolvimento)
-    """
+    """Retorna conexão com o banco."""
     if _USANDO_TURSO:
-        client = libsql_client.create_client_sync(
-            url=TURSO_URL,
-            auth_token=TURSO_TOKEN,
-        )
-        return TursoConnection(client)
+        return TursoConnection()
  
     conn = _sqlite3.connect(DB_PATH, timeout=10, check_same_thread=False)
     conn.row_factory = _sqlite3.Row
