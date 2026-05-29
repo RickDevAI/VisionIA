@@ -5,7 +5,7 @@
 
 **Uma plataforma inteligente de pré-validação de screenshots usando visão computacional**
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)<br/>
+[![MIT License]([![Telade-Login.jpg](https://i.postimg.cc/vZdsNNcq/Telade-Login.jpg)](https://postimg.cc/MvtNct0V))<br/>
 [![GitHub Stars](https://img.shields.io/github/stars/RickDevAI/VisionIA?style=social)](https://github.com/RickDevAI/VisionIA/stargazers)<br/>
 [![GitHub Forks](https://img.shields.io/github/forks/RickDevAI/VisionIA?style=social)](https://github.com/RickDevAI/VisionIA/network/members)<br/>
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
