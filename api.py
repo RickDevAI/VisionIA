@@ -850,6 +850,39 @@ def admin_listar_usuarios(
     }
 
 
+
+
+class AdminCriarUsuario(BaseModel):
+    nome: str
+    email: str
+    senha: str
+    telefone: Optional[str] = None
+    role: str = "QA Analyst"
+
+@app.post("/admin/usuarios/criar", tags=["admin"])
+def admin_criar_usuario(
+    data: AdminCriarUsuario,
+    admin_email: str = Depends(verificar_admin),
+):
+    """Cria um novo usuário diretamente (somente admin, sem convite)."""
+    if data.role not in ROLES_VALIDAS:
+        raise HTTPException(status_code=400, detail=f"Role inválido. Use: {ROLES_VALIDAS}")
+    if not senha_forte(data.senha):
+        raise HTTPException(status_code=400, detail="Senha fraca. Use maiúscula, minúscula, número e caractere especial.")
+    conn = conectar()
+    try:
+        conn.execute(
+            "INSERT INTO usuarios (nome, email, senha, telefone, role) VALUES (?, ?, ?, ?, ?)",
+            (data.nome, data.email.lower(), pwd_context.hash(data.senha), data.telefone, data.role)
+        )
+        conn.commit()
+        return {"msg": f"Usuário {data.email} criado com role '{data.role}'."}
+    except Exception as _e:
+        if "UNIQUE" not in str(_e) and "unique" not in str(_e): raise
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
+    finally:
+        conn.close()
+
 @app.put("/admin/usuarios/{usuario_email}/role", tags=["admin"])
 def admin_alterar_role(
     usuario_email: str,
