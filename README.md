@@ -38,7 +38,7 @@ O objetivo principal é automatizar o processo de verificação visual de telas 
 ### Screenshots das Interfaces
 
 #### Tela de Login
-![Login](https://via.placeholder.com/400x300?text=Tela+de+Login)
+![Login]([https://via.placeholder.com/400x300?text=Tela+de+Login](https://i.postimg.cc/vZdsNNcq/Telade-Login.jpg))
 
 #### Dashboard Administrativo
 ![Dashboard Admin](https://via.placeholder.com/400x300?text=Dashboard+Admin)
