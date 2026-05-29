@@ -101,7 +101,7 @@
 <body>
 
   <script>
-    const _tok = localStorage.getItem("token");
+    const _tok = localStorage.getItem("eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODAwMjc1NDEsImlkIjoiMDE5ZTZjOWEtM2MwMS03ZjM0LTk1MDktMjY1M2NjODM0ZTlhIiwicmlkIjoiMjA1Y2ZhZWItMzZiZi00ZmIxLTg5MzctNmJiYzgyZGFjMDQ4In0.J528bnt6pNcOIcN6BGZOwQoZdAR9PKeIRGIhir4Ewva9GdDoonhlat467lVYX_NqNed8qk4G4BNSfhmy5wcrAg");
     const _user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!_tok) { window.location.href = "login.html"; }
     if (_user.role !== "admin") { window.location.href = "index.html"; }
