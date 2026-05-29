@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - VisionIA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+
+
+<div class="login-container">
+  <img src="assets/logo.png" class="logo-login" alt="Logo do VisionIA">
+  <h2>Bem-vindo</h2>
+
+  <input type="email" id="email" placeholder="Digite seu e-mail" autocomplete="email">
+  <input type="password" id="senha" placeholder="Digite sua senha" autocomplete="current-password">
+
+  <button class="btn-login" onclick="login()">Entrar</button>
+
+  <a href="#" class="forgot-password" onclick="esqueciSenha()">
+    Esqueci minha senha
+  </a>
+
+  <div class="loading" id="loading">Processando...</div>
+  <div id="erro" class="error-box"></div>
+
+  <div class="small">
+    Plataforma de pré-validação inteligente para screenshots
+  </div>
+
+</div>
+
+
+
+
+<script src="js/config.js"></script>
+<script src="js/login.js"></script>
+
+</body>
+</html>

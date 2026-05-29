@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro - VisionIA</title>
+  <style>
+    .badge-modo { display:inline-block; font-size:11px; padding:3px 10px; border-radius:99px; font-weight:500; margin-left:8px; vertical-align:middle; }
+    .badge-admin  { background:#ede9fe; color:#6d28d9; }
+    .badge-convite{ background:#e0f2fe; color:#0369a1; }
+    #campoConvite { transition: all 0.2s; }
+  </style>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <img src="assets/logo.png" alt="Logo do VisionIA" class="logo-topbar">
+    </div>
+  </header>
+
+  <main class="main-content">
+    <section class="profile-card">
+
+      <div class="profile-header">
+        <div>
+          <h2>Cadastro de Usuário <span id="badgeModo"></span></h2>
+          <p id="subtituloCadastro" style="font-size:13px;color:var(--color-muted);margin-top:4px"></p>
+        </div>
+        <button class="btn-green" id="btnSalvar" onclick="salvarCadastro()">Salvar cadastro</button>
+      </div>
+
+      <div class="section">
+        <h3>Informações pessoais</h3>
+        <div class="form-grid">
+
+          <div class="input-group">
+            <div class="label-line">
+              <label for="nome">Nome</label>
+            </div>
+            <input type="text" id="nome" placeholder="Digite seu nome">
+          </div>
+
+          <div class="input-group">
+            <div class="label-line">
+              <label for="email">E-mail</label>
+            </div>
+            <input type="email" id="email" placeholder="Digite seu e-mail">
+          </div>
+
+          <div class="input-group">
+            <div class="label-line">
+              <label for="telefone">Telefone</label>
+            </div>
+            <input type="tel" id="telefone" placeholder="Digite seu telefone">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Segurança</h3>
+        <div class="form-grid">
+
+          <div class="input-group">
+            <label class="label-line" for="senha">Senha</label>
+            <input type="password" id="senha" placeholder="Digite a senha">
+            <div class="password-rules" id="passwordRules">
+              <div id="ruleLength" class="rule-item">• Pelo menos 8 caracteres</div>
+              <div id="ruleUpper"  class="rule-item">• Uma letra maiúscula</div>
+              <div id="ruleLower"  class="rule-item">• Uma letra minúscula</div>
+              <div id="ruleNumber" class="rule-item">• Um número</div>
+              <div id="ruleSpecial"class="rule-item">• Um caractere especial</div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="label-line" for="confirmar-senha">Confirmar senha</label>
+            <input type="password" id="confirmar-senha" placeholder="Confirme a senha">
+          </div>
+
+          <div class="input-group">
+            <div id="campoRole" style="display:none">
+              <label for="novoRole">Perfil do usuário</label>
+              <select id="novoRole" style="width:100%;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:14px;color:var(--color-text);background:#fff;margin-top:4px">
+                <option value="QA Analyst">QA Analyst</option>
+                <option value="QA Lead">QA Lead</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div id="campoConvite">
+              <label for="codigo-convite">Código de convite <span style="color:var(--color-danger)">*</span></label>
+              <input type="text" id="codigo-convite" placeholder="XXXX-XXXX-XXXX"
+                style="font-family:monospace;letter-spacing:2px;text-transform:uppercase;width:100%;padding:10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:14px;margin-top:4px"
+                oninput="this.value=this.value.toUpperCase()">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="mensagemCadastro" class="small" style="margin-top:14px;"></div>
+
+      <div class="actions">
+        <button class="btn-green" id="btnVoltar" onclick="voltarAoOrigem()">Voltar</button>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/config-cadastro.js"></script>
+</body>
+</html>

@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estatísticas - VisionIA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--color-card);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      padding: 22px 24px;
+      border: 1px solid #e8edf3;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-muted);
+    }
+
+    .stat-card .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1;
+    }
+
+    .stat-card .stat-sub {
+      font-size: 0.78rem;
+      color: var(--color-muted);
+    }
+
+    .stat-card.green .stat-value { color: var(--color-success); }
+    .stat-card.red   .stat-value { color: var(--color-danger); }
+    .stat-card.amber .stat-value { color: #b45309; }
+    .stat-card.blue  .stat-value { color: var(--color-primary); }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 700px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .section-card {
+      background: var(--color-card);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      border: 1px solid #e8edf3;
+      overflow: hidden;
+    }
+
+    .section-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+
+    .section-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .section-card-body {
+      padding: 20px 24px;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 120px;
+      padding-top: 8px;
+    }
+
+    .chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .chart-bar {
+      width: 100%;
+      border-radius: 5px 5px 0 0;
+      min-height: 4px;
+      transition: height 0.5s ease;
+      background: var(--color-primary);
+    }
+
+    .chart-bar.pass-bar    { background: var(--color-success); }
+    .chart-bar.fail-bar    { background: var(--color-danger); }
+    .chart-bar.default-bar { background: var(--color-primary); }
+
+    .chart-lbl {
+      font-size: 10px;
+      color: var(--color-muted);
+      text-align: center;
+    }
+
+    .chart-num {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--color-muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .pie-wrap {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+
+    .pie-circle {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      flex-shrink: 0;
+    }
+
+    .pie-svg {
+      width: 110px;
+      height: 110px;
+      transform: rotate(-90deg);
+    }
+
+    .pie-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pie-pct {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1;
+    }
+
+    .pie-lbl {
+      font-size: 0.65rem;
+      color: var(--color-muted);
+      text-align: center;
+    }
+
+    .pie-items {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .pie-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pie-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .pie-row-label {
+      font-size: 0.85rem;
+      color: var(--color-text);
+      flex: 1;
+    }
+
+    .pie-row-val {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .prog-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .prog-bar-label {
+      font-size: 0.82rem;
+      color: var(--color-text);
+      min-width: 90px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prog-bar-bg {
+      flex: 1;
+      height: 7px;
+      background: #e8edf3;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .prog-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.6s ease;
+    }
+
+    .prog-bar-pct {
+      font-size: 0.78rem;
+      color: var(--color-muted);
+      min-width: 34px;
+      text-align: right;
+    }
+
+    .hist-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .hist-table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-muted);
+      padding: 10px 14px;
+      text-align: left;
+      background: #f8f9fb;
+      border-bottom: 1px solid #e8edf3;
+    }
+
+    .hist-table td {
+      padding: 11px 14px;
+      font-size: 0.875rem;
+      color: var(--color-text);
+      border-bottom: 1px solid #f0f2f5;
+    }
+
+    .hist-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .hist-table tbody tr:hover td {
+      background: #f8f9fb;
+    }
+
+    .cell-muted {
+      font-size: 0.8rem;
+      color: var(--color-muted);
+    }
+
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--color-muted);
+      font-size: 0.9rem;
+    }
+
+    .empty-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .page-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e8edf3;
+    }
+
+    .page-tab {
+      padding: 10px 18px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-muted);
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .page-tab.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .export-btn {
+      padding: 7px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border, #dfe1e6);
+      background: #fff;
+      color: var(--color-primary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .export-btn:hover { background: #f4f5f7; }
+
+    .export-btn-pdf {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary);
+    }
+    .export-btn-pdf:hover { background: var(--color-primary-hover); }
+
+    .skeleton {
+      background: linear-gradient(90deg, #f0f2f5 25%, #e4e7eb 50%, #f0f2f5 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .sk-card { height: 90px; border-radius: var(--radius-md); }
+    .sk-chart { height: 160px; border-radius: var(--radius-md); margin-bottom: 18px; }
+    .sk-row   { height: 18px; margin-bottom: 12px; }
+
+    .badge-pass    { background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 500; }
+    .badge-fail    { background: #fee2e2; color: #b91c1c; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 500; }
+    .badge-warning { background: #fef9c3; color: #a16207; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 500; }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 4px;
+    }
+
+    .page-sub {
+      font-size: 0.875rem;
+      color: var(--color-muted);
+      margin-bottom: 28px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--color-primary);
+      cursor: pointer;
+      margin-bottom: 20px;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .back-link:hover { text-decoration: underline; }
+
+  </style>
+</head>
+<body>
+
+  <script>
+    if (!localStorage.getItem("token")) window.location.href = "login.html";
+  </script>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="assets/logo.png" class="logo-topbar" alt="Logo VisionIA">
+    </div>
+    <div class="user-access" onclick="toggleMenu()">
+      <div class="user-avatar" id="userAvatar">US</div>
+      <div class="user-info">
+        <div class="user-name" id="userName"></div>
+        <div class="user-role" id="userRole"></div>
+      </div>
+      <div class="dropdown-menu" id="userMenu">
+        <div class="dropdown-item" onclick="window.location.href='index.html'">Dashboard</div>
+        <div class="dropdown-item" onclick="window.location.href='config.html'">Configurações</div>
+        <div class="dropdown-item logout" onclick="logout()">Sair</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <button class="back-link" onclick="window.location.href='index.html'">
+      ← Voltar ao Dashboard
+    </button>
+
+    <div class="page-title">Minhas Estatísticas</div>
+    <div class="page-sub" id="pageSub">Carregando dados...</div>
+
+    <div class="page-tabs">
+      <button class="page-tab active" onclick="switchTab('resumo', this)">Resumo</button>
+      <button class="page-tab"        onclick="switchTab('evolucao', this)">Evolução</button>
+      <button class="page-tab"        onclick="switchTab('historico', this)">Histórico</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-resumo">
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="skeleton sk-card"></div>
+        <div class="skeleton sk-card"></div>
+        <div class="skeleton sk-card"></div>
+        <div class="skeleton sk-card"></div>
+        <div class="skeleton sk-card"></div>
+      </div>
+
+      <div class="two-col">
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">Distribuição de resultados</span>
+          </div>
+          <div class="section-card-body" id="pieSection">
+            <div class="skeleton sk-chart"></div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <span class="section-card-title">Análises por tipo de tela</span>
+          </div>
+          <div class="section-card-body" id="telaSection">
+            <div class="skeleton sk-row" style="width:80%"></div>
+            <div class="skeleton sk-row" style="width:60%"></div>
+            <div class="skeleton sk-row" style="width:40%"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-evolucao">
+      <div class="section-card" style="margin-bottom: 18px;">
+        <div class="section-card-header">
+          <span class="section-card-title">Análises por dia — últimos 7 dias</span>
+        </div>
+        <div class="section-card-body">
+          <div class="chart-bars" id="chartBars">
+            <div class="skeleton sk-chart" style="width:100%;height:120px;margin:0"></div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--color-success)"></span>PASS</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--color-danger)"></span>FAIL</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>WARNING</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-historico">
+      <div class="section-card">
+        <div class="section-card-header">
+          <span class="section-card-title">Histórico de análises</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="export-btn" onclick="exportarCSV()">⬇ CSV</button>
+            <button class="export-btn export-btn-pdf" onclick="exportarPDF()">⬇ PDF</button>
+          </div>
+        </div>
+        <div id="histBody">
+          <div class="skeleton sk-row" style="margin:20px 24px;width:90%"></div>
+          <div class="skeleton sk-row" style="margin:0 24px 14px;width:70%"></div>
+          <div class="skeleton sk-row" style="margin:0 24px 14px;width:80%"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/script.js"></script>
+  <script>
+
+    let _stats = null;
+    let _hist  = [];
+
+    function esc(v) {
+      return String(v || "").replace(/[&<>"']/g, c =>
+        ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])
+      );
+    }
+
+    function fmtData(d) {
+      if (!d) return "—";
+      return new Date(d + "Z").toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function badgeStatus(s) {
+      const map = { PASS: "badge-pass", FAIL: "badge-fail", WARNING: "badge-warning" };
+      return `<span class="${map[s] || 'badge-warning'}">${esc(s)}</span>`;
+    }
+
+    function corBarra(pct) {
+      if (pct >= 70) return "var(--color-success)";
+      if (pct >= 40) return "#f59e0b";
+      return "var(--color-danger)";
+    }
+
+    function switchTab(name, btn) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".page-tab").forEach(b => b.classList.remove("active"));
+      document.getElementById("tab-" + name).classList.add("active");
+      btn.classList.add("active");
+    }
+
+    function toggleMenu() {
+      document.getElementById("userMenu").classList.toggle("active");
+    }
+    function logout() {
+      limparSessao();
+      window.location.href = "login.html";
+    }
+
+    document.addEventListener("click", e => {
+      const box  = document.querySelector(".user-access");
+      const menu = document.getElementById("userMenu");
+      if (box && menu && !box.contains(e.target)) menu.classList.remove("active");
+    });
+
+    function renderStatsGrid(d) {
+      const taxa = d.taxa_aprovacao ?? 0;
+      const corTaxa = taxa >= 70 ? "green" : taxa >= 40 ? "amber" : "red";
+      document.getElementById("statsGrid").innerHTML = `
+        <div class="stat-card blue">
+          <div class="stat-label">Total analisadas</div>
+          <div class="stat-value">${d.total ?? 0}</div>
+          <div class="stat-sub">desde o início</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Aprovadas</div>
+          <div class="stat-value">${d.aprovadas ?? 0}</div>
+          <div class="stat-sub">PASS</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Alertas</div>
+          <div class="stat-value">${d.alertas ?? 0}</div>
+          <div class="stat-sub">WARNING</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Reprovadas</div>
+          <div class="stat-value">${d.falhas ?? 0}</div>
+          <div class="stat-sub">FAIL</div>
+        </div>
+        <div class="stat-card ${corTaxa}">
+          <div class="stat-label">Taxa aprovação</div>
+          <div class="stat-value">${taxa}%</div>
+          <div class="stat-sub">PASS / total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Score médio</div>
+          <div class="stat-value">${d.score_medio != null ? d.score_medio + "%" : "—"}</div>
+          <div class="stat-sub">confiança da IA</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tempo médio</div>
+          <div class="stat-value" style="font-size:1.4rem">${d.tempo_medio_ms != null ? Math.round(d.tempo_medio_ms) + " ms" : "—"}</div>
+          <div class="stat-sub">por análise</div>
+        </div>`;
+    }
+
+    function renderPie(d) {
+      const total = d.total || 1;
+      const pass  = d.aprovadas  || 0;
+      const warn  = d.alertas    || 0;
+      const fail  = d.falhas     || 0;
+      const taxa  = Math.round((pass / total) * 100);
+
+      const r   = 40;
+      const circ = 2 * Math.PI * r;
+
+      function arco(valor, offset) {
+        const len = (valor / total) * circ;
+        return `stroke-dasharray="${len.toFixed(2)} ${(circ - len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"`;
+      }
+
+      const passLen  = (pass  / total) * circ;
+      const warnLen  = (warn  / total) * circ;
+      const failLen  = (fail  / total) * circ;
+      const passOff  = 0;
+      const warnOff  = -passLen;
+      const failOff  = -(passLen + warnLen);
+
+      document.getElementById("pieSection").innerHTML = `
+        <div class="pie-wrap">
+          <div class="pie-circle">
+            <svg class="pie-svg" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="${r}" fill="none" stroke="#e8edf3" stroke-width="18"/>
+              <circle cx="50" cy="50" r="${r}" fill="none" stroke="#22c55e" stroke-width="18"
+                stroke-dasharray="${(passLen).toFixed(2)} ${(circ-passLen).toFixed(2)}"
+                stroke-dashoffset="${passOff.toFixed(2)}"/>
+              <circle cx="50" cy="50" r="${r}" fill="none" stroke="#f59e0b" stroke-width="18"
+                stroke-dasharray="${(warnLen).toFixed(2)} ${(circ-warnLen).toFixed(2)}"
+                stroke-dashoffset="${warnOff.toFixed(2)}"/>
+              <circle cx="50" cy="50" r="${r}" fill="none" stroke="#b91c1c" stroke-width="18"
+                stroke-dasharray="${(failLen).toFixed(2)} ${(circ-failLen).toFixed(2)}"
+                stroke-dashoffset="${failOff.toFixed(2)}"/>
+            </svg>
+            <div class="pie-center">
+              <span class="pie-pct">${taxa}%</span>
+              <span class="pie-lbl">aprovação</span>
+            </div>
+          </div>
+          <div class="pie-items">
+            <div class="pie-row">
+              <span class="pie-dot" style="background:#22c55e"></span>
+              <span class="pie-row-label">PASS</span>
+              <span class="pie-row-val">${pass}</span>
+            </div>
+            <div class="pie-row">
+              <span class="pie-dot" style="background:#f59e0b"></span>
+              <span class="pie-row-label">WARNING</span>
+              <span class="pie-row-val">${warn}</span>
+            </div>
+            <div class="pie-row">
+              <span class="pie-dot" style="background:#b91c1c"></span>
+              <span class="pie-row-label">FAIL</span>
+              <span class="pie-row-val">${fail}</span>
+            </div>
+            <div class="pie-row">
+              <span class="pie-dot" style="background:#e8edf3"></span>
+              <span class="pie-row-label">Total</span>
+              <span class="pie-row-val">${total}</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderTelas(telas) {
+      const el = document.getElementById("telaSection");
+      if (!telas || !telas.length) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div>Nenhuma análise ainda.</div>';
+        return;
+      }
+      const max = Math.max(...telas.map(t => t.qtd), 1);
+      el.innerHTML = telas.map(t => {
+        const pct = Math.round((t.qtd / max) * 100);
+        return `
+          <div class="prog-bar-wrap">
+            <span class="prog-bar-label" title="${esc(t.label)}">${esc(t.label)}</span>
+            <div class="prog-bar-bg">
+              <div class="prog-bar-fill" style="width:${pct}%; background:var(--color-primary)"></div>
+            </div>
+            <span class="prog-bar-pct">${t.qtd}</span>
+          </div>`;
+      }).join("");
+    }
+
+    function renderChart(evolucao) {
+      const el = document.getElementById("chartBars");
+      if (!evolucao || !evolucao.length) {
+        el.innerHTML = '<div class="empty-state" style="width:100%"><div class="empty-icon">📅</div>Sem dados nos últimos 7 dias.</div>';
+        return;
+      }
+      const maxTotal = Math.max(...evolucao.map(e => e.total), 1);
+      el.innerHTML = evolucao.map(e => {
+        const hPass = Math.round(((e.aprovadas || 0) / maxTotal) * 100);
+        const hFail = Math.round(((e.falhas    || 0) / maxTotal) * 100);
+        const hWarn = Math.round((((e.total - (e.aprovadas||0) - (e.falhas||0)) || 0) / maxTotal) * 100);
+        const dia   = e.dia ? e.dia.slice(5) : "—"; 
+        return `
+          <div class="chart-col">
+            <span class="chart-num">${e.total}</span>
+            <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;flex:1;gap:2px">
+              <div class="chart-bar pass-bar"    style="height:${hPass}px"></div>
+              <div class="chart-bar"             style="height:${hWarn}px;background:#f59e0b"></div>
+              <div class="chart-bar fail-bar"    style="height:${hFail}px"></div>
+            </div>
+            <span class="chart-lbl">${dia}</span>
+          </div>`;
+      }).join("");
+    }
+
+    function renderHistorico(lista) {
+      const el = document.getElementById("histBody");
+      if (!lista.length) {
+        el.innerHTML = `<div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          Nenhuma análise registrada ainda.
+        </div>`;
+        return;
+      }
+      el.innerHTML = `
+        <table class="hist-table">
+          <thead>
+            <tr>
+              <th>Arquivo</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Tela</th>
+              <th>Classe predita</th>
+              <th>Tempo</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lista.map(h => `
+              <tr>
+                <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  ${esc(h.nome_arquivo)}
+                </td>
+                <td>${badgeStatus(h.status)}</td>
+                <td>${h.score != null ? h.score + "%" : "—"}</td>
+                <td class="cell-muted">${esc(h.tipo_tela_label || h.tipo_tela || "—")}</td>
+                <td class="cell-muted">${esc(h.classe_predita || "—")}</td>
+                <td class="cell-muted">${h.tempo_ms != null ? Math.round(h.tempo_ms) + " ms" : "—"}</td>
+                <td class="cell-muted">${fmtData(h.data_analise)}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    function exportarCSV() {
+      if (!_hist.length) { alert("Nenhum dado para exportar."); return; }
+
+      const usuario = localStorage.getItem("user")
+        ? (JSON.parse(localStorage.getItem("user") || "{}").email || "") : "";
+      const geradoEm = new Date().toLocaleString("pt-BR");
+
+      const meta = [
+        `"VisionIA — Relatório de Análises"`,
+        `"Usuário: ${usuario}"`,
+        `"Gerado em: ${geradoEm}"`,
+        `"Total de registros: ${_hist.length}"`,
+        "",
+      ].join("\n");
+
+      const header = "Arquivo,Status,Score (%),Confiança IA,Tela,Classe Predita,Tempo (ms),Data";
+
+      const linhas = _hist.map(h => [
+        `"${(h.nome_arquivo    || "").replace(/"/g, '""')}"`,
+        h.status               || "",
+        h.score  != null       ? h.score : "",
+        h.score  != null       ? (h.score >= 70 ? "Alta" : h.score >= 40 ? "Média" : "Baixa") : "",
+        `"${(h.tipo_tela_label || h.tipo_tela || "").replace(/"/g, '""')}"`,
+        `"${(h.classe_predita  || "").replace(/"/g, '""')}"`,
+        h.tempo_ms != null     ? Math.round(h.tempo_ms) : "",
+        h.data_analise         || "",
+      ].join(","));
+
+      const csv  = "\uFEFF" + meta + header + "\n" + linhas.join("\n"); 
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `visionia-relatorio-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportarPDF() {
+      if (!_hist.length && !_stats) {
+        alert("Nenhum dado para exportar."); return;
+      }
+
+      const usuario   = localStorage.getItem("user")
+        ? (JSON.parse(localStorage.getItem("user") || "{}") ) : {};
+      const nomeUser  = usuario.nome  || usuario.email || "—";
+      const emailUser = usuario.email || "—";
+      const geradoEm  = new Date().toLocaleString("pt-BR");
+      const dataStr   = new Date().toISOString().slice(0, 10);
+
+      const COR_PRIMARIA  = "#082b52";
+      const COR_VERDE     = "#16a34a";
+      const COR_VERMELHO  = "#b91c1c";
+      const COR_AMARELO   = "#a16207";
+      const COR_CINZA     = "#6b778c";
+      const COR_BORDA     = "#e8edf3";
+      const COR_FUNDO_LIN = "#f8f9fb";
+
+      const win = window.open("", "_blank", "width=900,height=700");
+      if (!win) { alert("Permita pop-ups para gerar o PDF."); return; }
+
+      const stats = _stats || {};
+      const taxa  = stats.taxa_aprovacao ?? 0;
+      const corTaxa = taxa >= 70 ? COR_VERDE : taxa >= 40 ? COR_AMARELO : COR_VERMELHO;
+
+      const linhasTabela = _hist.map((h, i) => {
+        const corStatus = h.status === "PASS" ? COR_VERDE
+                        : h.status === "FAIL" ? COR_VERMELHO : COR_AMARELO;
+        const bgLin = i % 2 === 0 ? "#ffffff" : COR_FUNDO_LIN;
+        const data  = h.data_analise
+          ? new Date(h.data_analise + "Z").toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+          : "—";
+        const nome  = (h.nome_arquivo || "").length > 30
+          ? (h.nome_arquivo || "").slice(0, 28) + "…"
+          : (h.nome_arquivo || "—");
+        return `
+          <tr style="background:${bgLin}">
+            <td style="padding:6px 10px;border-bottom:1px solid ${COR_BORDA};font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(nome)}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid ${COR_BORDA};font-size:11px">
+              <span style="color:${corStatus};font-weight:600">${h.status || "—"}</span>
+            </td>
+            <td style="padding:6px 10px;border-bottom:1px solid ${COR_BORDA};font-size:11px;text-align:right">${h.score != null ? h.score + "%" : "—"}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid ${COR_BORDA};font-size:11px;color:${COR_CINZA}">${esc(h.tipo_tela_label || h.tipo_tela || "—")}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid ${COR_BORDA};font-size:11px;color:${COR_CINZA}">${h.tempo_ms != null ? Math.round(h.tempo_ms) + " ms" : "—"}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid ${COR_BORDA};font-size:11px;color:${COR_CINZA}">${esc(data)}</td>
+          </tr>`;
+      }).join("");
+
+      const passW  = Math.round(taxa);
+      const failW  = stats.total ? Math.round(((stats.falhas || 0) / stats.total) * 100) : 0;
+      const warnW  = 100 - passW - failW;
+
+      win.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>VisionIA — Relatório ${dataStr}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #172b4d; background: #fff; font-size: 13px; }
+  @page { size: A4; margin: 18mm 15mm; }
+  @media print {
+    .no-print { display: none !important; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  .page { max-width: 800px; margin: 0 auto; padding: 24px; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 16px; border-bottom: 3px solid ${COR_PRIMARIA}; margin-bottom: 24px; }
+  .header-logo { display: flex; flex-direction: column; }
+  .header-title { font-size: 22px; font-weight: 700; color: ${COR_PRIMARIA}; }
+  .header-sub   { font-size: 12px; color: ${COR_CINZA}; margin-top: 2px; }
+  .header-info  { text-align: right; font-size: 11px; color: ${COR_CINZA}; line-height: 1.8; }
+
+  /* Seções */
+  .section-title { font-size: 13px; font-weight: 700; color: ${COR_PRIMARIA};
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1px solid ${COR_BORDA}; }
+
+  /* Cards de stats */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px; }
+  .stat-box { border: 1px solid ${COR_BORDA}; border-radius: 8px; padding: 12px 14px; }
+  .stat-box .num { font-size: 22px; font-weight: 700; }
+  .stat-box .lbl { font-size: 10px; color: ${COR_CINZA}; text-transform: uppercase;
+    letter-spacing: 0.05em; margin-top: 2px; }
+  .stat-box.green .num { color: ${COR_VERDE}; }
+  .stat-box.red   .num { color: ${COR_VERMELHO}; }
+  .stat-box.amber .num { color: ${COR_AMARELO}; }
+  .stat-box.blue  .num { color: ${COR_PRIMARIA}; }
+
+  /* Barra de distribuição */
+  .dist-bar { display: flex; height: 14px; border-radius: 99px; overflow: hidden; margin: 8px 0 6px; }
+  .dist-bar-pass { background: ${COR_VERDE}; }
+  .dist-bar-warn { background: #f59e0b; }
+  .dist-bar-fail { background: ${COR_VERMELHO}; }
+  .dist-legend { display: flex; gap: 18px; }
+  .dist-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: ${COR_CINZA}; }
+  .dist-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+  /* Tabela */
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: ${COR_PRIMARIA}; color: #fff; font-size: 11px; font-weight: 600;
+    padding: 8px 10px; text-align: left; }
+  thead th:last-child { text-align: right; }
+
+  /* Footer */
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid ${COR_BORDA};
+    display: flex; justify-content: space-between; font-size: 10px; color: ${COR_CINZA}; }
+
+  /* Botão imprimir */
+  .print-bar { background: ${COR_PRIMARIA}; color: #fff; padding: 12px 20px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
+  .print-bar span { font-size: 14px; font-weight: 600; }
+  .print-btn { padding: 8px 20px; background: #fff; color: ${COR_PRIMARIA};
+    border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<!-- Barra de impressão (não aparece no PDF) -->
+<div class="print-bar no-print">
+  <span>VisionIA — Relatório gerado. Salve como PDF usando o botão abaixo.</span>
+  <button class="print-btn" onclick="window.print()">🖨 Salvar como PDF</button>
+</div>
+
+<div class="page">
+
+  <!-- Cabeçalho -->
+  <div class="header">
+    <div class="header-logo">
+      <div class="header-title">VisionIA</div>
+      <div class="header-sub">Sistema de Validação de Screenshots GMS</div>
+    </div>
+    <div class="header-info">
+      <strong>Relatório de Análises</strong><br>
+      Usuário: ${esc(nomeUser)}<br>
+      E-mail:  ${esc(emailUser)}<br>
+      Gerado em: ${geradoEm}
+    </div>
+  </div>
+
+  <!-- Sumário executivo -->
+  <div class="section-title">Sumário Executivo</div>
+  <div class="stats-row">
+    <div class="stat-box blue">
+      <div class="num">${stats.total ?? 0}</div>
+      <div class="lbl">Total analisadas</div>
+    </div>
+    <div class="stat-box green">
+      <div class="num">${stats.aprovadas ?? 0}</div>
+      <div class="lbl">Aprovadas (PASS)</div>
+    </div>
+    <div class="stat-box amber">
+      <div class="num">${stats.alertas ?? 0}</div>
+      <div class="lbl">Alertas (WARNING)</div>
+    </div>
+    <div class="stat-box red">
+      <div class="num">${stats.falhas ?? 0}</div>
+      <div class="lbl">Reprovadas (FAIL)</div>
+    </div>
+  </div>
+  <div class="stats-row" style="margin-top:4px">
+    <div class="stat-box" style="border-color:${corTaxa}">
+      <div class="num" style="color:${corTaxa}">${taxa}%</div>
+      <div class="lbl">Taxa de aprovação</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">${stats.score_medio != null ? stats.score_medio + "%" : "—"}</div>
+      <div class="lbl">Score médio IA</div>
+    </div>
+    <div class="stat-box">
+      <div class="num" style="font-size:16px">${stats.tempo_medio_ms != null ? Math.round(stats.tempo_medio_ms) + " ms" : "—"}</div>
+      <div class="lbl">Tempo médio análise</div>
+    </div>
+    <div class="stat-box">
+      <div class="num">${_hist.length}</div>
+      <div class="lbl">Registros neste relatório</div>
+    </div>
+  </div>
+
+  <!-- Distribuição visual -->
+  <div class="section-title">Distribuição de Resultados</div>
+  <div class="dist-bar">
+    <div class="dist-bar-pass" style="width:${passW}%"></div>
+    <div class="dist-bar-warn" style="width:${warnW > 0 ? warnW : 0}%"></div>
+    <div class="dist-bar-fail" style="width:${failW}%"></div>
+  </div>
+  <div class="dist-legend">
+    <div class="dist-legend-item"><span class="dist-dot" style="background:${COR_VERDE}"></span>PASS ${passW}%</div>
+    <div class="dist-legend-item"><span class="dist-dot" style="background:#f59e0b"></span>WARNING ${warnW > 0 ? warnW : 0}%</div>
+    <div class="dist-legend-item"><span class="dist-dot" style="background:${COR_VERMELHO}"></span>FAIL ${failW}%</div>
+  </div>
+
+  <!-- Tabela de histórico -->
+  <div class="section-title">Histórico Detalhado (${_hist.length} registros)</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28%">Arquivo</th>
+        <th style="width:10%">Status</th>
+        <th style="width:9%;text-align:right">Score</th>
+        <th style="width:18%">Tipo de Tela</th>
+        <th style="width:12%;text-align:right">Tempo</th>
+        <th style="width:18%;text-align:right">Data</th>
+      </tr>
+    </thead>
+    <tbody>${linhasTabela}</tbody>
+  </table>
+
+  <!-- Rodapé -->
+  <div class="footer">
+    <span>VisionIA — TCC · Validação de Screenshots GMS com IA</span>
+    <span>Relatório gerado em ${geradoEm}</span>
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>`);
+
+      win.document.close();
+      win.onload = () => setTimeout(() => win.print(), 400);
+    }
+
+    async function carregarTudo() {
+      const token = getToken();
+      const headers = { Authorization: `Bearer ${token}` };
+
+      carregarUsuarioDashboard();
+
+      try {
+        const [resStats, resHist] = await Promise.all([
+          fetch(`${API_URL}/stats`,     { headers }),
+          fetch(`${API_URL}/historico?limite=100`, { headers }),
+        ]);
+
+        if (resStats.status === 401 || resHist.status === 401) {
+          alert("Sessão expirada. Faça login novamente.");
+          limparSessao();
+          window.location.href = "login.html";
+          return;
+        }
+
+        _stats = await resStats.json();
+        _hist  = await resHist.json();
+
+        const ultima = _stats.ultima_analise
+          ? `Última análise: ${fmtData(_stats.ultima_analise)}`
+          : "Nenhuma análise realizada ainda.";
+        document.getElementById("pageSub").textContent = ultima;
+
+        renderStatsGrid(_stats);
+        renderPie(_stats);
+        renderTelas(_stats.por_tipo_tela || []);
+        renderChart(_stats.evolucao_7dias || []);
+        renderHistorico(_hist);
+
+      } catch (e) {
+        console.error("Erro ao carregar dados:", e);
+        document.getElementById("pageSub").textContent = "Erro ao carregar dados. Tente novamente.";
+        document.getElementById("statsGrid").innerHTML =
+          '<div class="empty-state" style="grid-column:1/-1">Não foi possível carregar as estatísticas.</div>';
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", carregarTudo);
+
+  </script>
+</body>
+</html>

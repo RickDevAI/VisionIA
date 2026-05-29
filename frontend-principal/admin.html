@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Admin - VisionIA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .admin-container { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+    .admin-title { font-size: 1.3rem; font-weight: 700; color: var(--color-text); margin-bottom: 4px; }
+    .admin-sub   { font-size: 0.875rem; color: var(--color-muted); margin-bottom: 28px; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid var(--color-border); }
+    .tab-btn { padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; cursor: pointer; font-size: 0.875rem; font-weight: 500;
+      color: var(--color-muted); transition: color var(--transition), border-color var(--transition); }
+    .tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat-card { background: var(--color-card); border-radius: var(--radius-md); padding: 18px 20px;
+      box-shadow: var(--shadow-soft); }
+    .stat-card .num  { font-size: 1.8rem; font-weight: 700; color: var(--color-text); }
+    .stat-card .lbl  { font-size: 0.78rem; color: var(--color-muted); margin-top: 2px; }
+    .stat-card.green .num { color: #16a34a; }
+    .stat-card.red   .num { color: var(--color-danger); }
+    .stat-card.amber .num { color: #b45309; }
+
+    .table-card { background: var(--color-card); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); overflow: hidden; }
+    .table-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px;
+      border-bottom: 1px solid var(--color-border); flex-wrap: wrap; gap: 10px; }
+    .table-toolbar-title { font-size: 0.95rem; font-weight: 600; color: var(--color-text); }
+    .search-input { padding: 7px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+      font-size: 0.85rem; color: var(--color-text); outline: none; width: 220px; }
+    .search-input:focus { border-color: var(--color-secondary); }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 0.78rem; font-weight: 600; color: var(--color-muted); text-transform: uppercase;
+      letter-spacing: 0.04em; padding: 10px 16px; text-align: left; background: #f8f9fb; }
+    tbody tr { border-top: 1px solid var(--color-border); }
+    tbody tr:hover { background: #f4f5f7; }
+    tbody td { padding: 11px 16px; font-size: 0.875rem; color: var(--color-text); }
+    .cell-muted { color: var(--color-muted); font-size: 0.8rem; }
+
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 500; }
+    .badge-pass    { background: #dcfce7; color: #15803d; }
+    .badge-fail    { background: #fee2e2; color: #b91c1c; }
+    .badge-warning { background: #fef9c3; color: #a16207; }
+    .badge-admin   { background: #ede9fe; color: #6d28d9; }
+    .badge-qa      { background: #e0f2fe; color: #0369a1; }
+    .badge-lead    { background: #f0fdf4; color: #166534; }
+
+    .role-select { padding: 4px 8px; border: 1px solid var(--color-border); border-radius: 6px;
+      font-size: 0.8rem; color: var(--color-text); background: #fff; cursor: pointer; }
+    .role-select:focus { outline: none; border-color: var(--color-secondary); }
+
+    .btn-danger-sm { padding: 4px 10px; border-radius: 6px; border: 1px solid #fca5a5;
+      background: #fee2e2; color: var(--color-danger); font-size: 0.78rem; cursor: pointer; }
+    .btn-danger-sm:hover { background: #fecaca; }
+
+    .progress-wrap { display: flex; align-items: center; gap: 8px; }
+    .progress-bg { flex: 1; height: 5px; background: #e5e7eb; border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; }
+    .fill-green  { background: #22c55e; }
+    .fill-red    { background: var(--color-danger); }
+    .fill-amber  { background: var(--color-warning); }
+
+    .chart-wrap { display: flex; align-items: flex-end; gap: 6px; height: 100px; padding: 8px 0 0; }
+    .chart-col  { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .chart-bar  { width: 100%; border-radius: 4px 4px 0 0; background: var(--color-secondary); min-height: 4px; }
+    .chart-lbl  { font-size: 10px; color: var(--color-muted); white-space: nowrap; }
+    .chart-num  { font-size: 10px; color: var(--color-text); font-weight: 500; }
+
+    .filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .filter-btn { padding: 5px 14px; border-radius: 99px; border: 1px solid var(--color-border);
+      background: var(--color-card); font-size: 0.8rem; cursor: pointer; color: var(--color-muted); }
+    .filter-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+    .empty { padding: 40px; text-align: center; color: var(--color-muted); font-size: 0.875rem; }
+    .loading { padding: 40px; text-align: center; color: var(--color-muted); font-size: 0.875rem; }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--color-text); color: #fff;
+      padding: 10px 18px; border-radius: var(--radius-sm); font-size: 0.875rem;
+      opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+      align-items: center; justify-content: center; z-index: 100; }
+    .modal-bg.open { display: flex; }
+    .modal-box { background: #fff; border-radius: var(--radius-md); padding: 28px 32px;
+      max-width: 380px; width: 90%; box-shadow: var(--shadow-strong); }
+    .modal-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .modal-body  { font-size: 0.875rem; color: var(--color-muted); margin-bottom: 20px; line-height: 1.6; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancel { padding: 8px 18px; border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+      background: #fff; font-size: 0.875rem; cursor: pointer; color: var(--color-text); }
+    .btn-confirm-danger { padding: 8px 18px; border: none; border-radius: var(--radius-sm);
+      background: var(--color-danger); color: #fff; font-size: 0.875rem; cursor: pointer; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <script>
+    const _tok = localStorage.getItem("token");
+    const _user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!_tok) { window.location.href = "login.html"; }
+    if (_user.role !== "admin") { window.location.href = "index.html"; }
+  </script>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="assets/logo.png" class="logo-topbar" alt="Logo VisionIA">
+    </div>
+    <div class="user-access" onclick="toggleMenu()">
+      <div class="user-avatar" id="userAvatar">AD</div>
+      <div class="user-info">
+        <div class="user-name" id="userName"></div>
+        <div class="user-role" id="userRole"></div>
+      </div>
+      <div class="dropdown-menu" id="userMenu">
+        <div class="dropdown-item" onclick="window.location.href='stats.html'">Estatísticas</div>
+        <div class="dropdown-item" onclick="window.location.href='index.html'">Dashboard</div>
+        <div class="dropdown-item logout" onclick="logout()">Sair</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-container">
+    <div class="admin-title">Painel de Administração</div>
+    <div class="admin-sub">Visão global do sistema — acesso restrito a administradores</div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('overview')">Visão geral</button>
+      <button class="tab-btn" onclick="switchTab('usuarios')">Usuários</button>
+      <button class="tab-btn" onclick="switchTab('convites')">Convites</button>
+      <button class="tab-btn" onclick="switchTab('historico')">Histórico global</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-overview">
+      <div class="stat-grid" id="statCards">
+        <div class="loading">Carregando estatísticas...</div>
+      </div>
+
+      <div class="table-card" style="margin-bottom: 24px;">
+        <div class="table-toolbar">
+          <span class="table-toolbar-title">Evolução dos últimos 14 dias</span>
+        </div>
+        <div style="padding: 16px 20px 20px;">
+          <div class="chart-wrap" id="chartEvolucao">
+            <div class="loading">Carregando gráfico...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <span class="table-toolbar-title">Ranking de usuários</span>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Usuário</th>
+            <th>Análises</th>
+            <th>Taxa PASS</th>
+            <th>Score médio</th>
+            <th>Última análise</th>
+          </tr></thead>
+          <tbody id="tbRanking"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-usuarios">
+      <div class="table-card">
+        <div class="table-toolbar">
+          <span class="table-toolbar-title">Todos os usuários</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input class="search-input" placeholder="Filtrar por nome ou e-mail..." id="searchUsuarios" oninput="filtrarUsuarios()">
+            <button class="btn-primary" onclick="window.location.href='cadastro.html?modo=admin'" style="padding:7px 14px;font-size:13px">+ Novo usuário</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Nome / E-mail</th>
+            <th>Role</th>
+            <th>Análises</th>
+            <th>Último login</th>
+            <th>Criado por</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody id="tbUsuarios"></tbody>
+        </table>
+        <div class="empty" id="emptyUsuarios" style="display:none">Nenhum usuário encontrado.</div>
+      </div>
+    </div>
+
+    <!-- TAB: Convites -->
+    <div class="tab-panel" id="tab-convites">
+      <div class="table-card" style="margin-bottom:16px">
+        <div class="table-toolbar">
+          <span class="table-toolbar-title">Gerar convite de cadastro</span>
+        </div>
+        <div style="padding:16px 20px">
+          <p style="font-size:13px;color:var(--color-muted);margin-bottom:14px;line-height:1.6">
+            Gere um código único válido por <strong>48 horas</strong>. Compartilhe com o usuário — ele precisará deste código para criar a conta na tela de cadastro.
+          </p>
+          <button class="btn-primary" onclick="gerarConvite()" style="padding:8px 20px">+ Gerar novo convite</button>
+          <div id="codigoGerado" style="display:none;margin-top:14px;padding:14px 18px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border:1px solid var(--color-border)">
+            <div style="font-size:12px;color:var(--color-muted);margin-bottom:6px">Código de convite gerado:</div>
+            <div style="font-size:22px;font-weight:700;font-family:monospace;letter-spacing:2px;color:var(--color-text)" id="codigoValor"></div>
+            <div style="font-size:12px;color:var(--color-muted);margin-top:6px" id="codigoExpira"></div>
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button onclick="copiarCodigo()" style="padding:5px 14px;border-radius:6px;border:1px solid var(--color-border);background:#fff;font-size:12px;cursor:pointer">📋 Copiar código</button><button onclick="copiarLinkConvite()" style="padding:5px 14px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-size:12px;cursor:pointer">🔗 Copiar link de cadastro</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <span class="table-toolbar-title">Histórico de convites</span>
+          <button class="export-btn" onclick="carregarConvites()">↻ Atualizar</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Código</th>
+            <th>Criado por</th>
+            <th>Usado por</th>
+            <th>Expira em</th>
+            <th>Status</th>
+          </tr></thead>
+          <tbody id="tbConvites"></tbody>
+        </table>
+        <div class="empty" id="emptyConvites" style="display:none">Nenhum convite gerado ainda.</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-historico">
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn active" onclick="filtrarHistorico(null, this)">Todos</button>
+        <button class="filter-btn" onclick="filtrarHistorico('PASS', this)">✓ PASS</button>
+        <button class="filter-btn" onclick="filtrarHistorico('WARNING', this)">⚠ WARNING</button>
+        <button class="filter-btn" onclick="filtrarHistorico('FAIL', this)">✗ FAIL</button>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr>
+            <th>Usuário</th>
+            <th>Arquivo</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Tela</th>
+            <th>Data</th>
+          </tr></thead>
+          <tbody id="tbHistorico"></tbody>
+        </table>
+        <div class="empty" id="emptyHistorico" style="display:none">Nenhuma análise encontrada.</div>
+        <div class="loading" id="loadingHistorico" style="display:none">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-bg" id="confirmModal">
+    <div class="modal-box">
+      <div class="modal-title" id="modalTitle">Confirmar ação</div>
+      <div class="modal-body"  id="modalBody"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+        <button class="btn-confirm-danger" id="modalConfirmBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script>
+    const TOKEN = localStorage.getItem("token");
+    const headers = { "Authorization": `Bearer ${TOKEN}` };
+    let todosUsuarios = [];
+
+    function toggleMenu() {
+      document.getElementById("userMenu").classList.toggle("active");
+    }
+    function logout() {
+      localStorage.clear(); window.location.href = "login.html";
+    }
+    function irConfig() {
+      window.location.href = "configuration.html";
+    }
+    (async () => {
+      try {
+        const r = await fetch(`${API_URL}/me`, { headers });
+        if (!r.ok) return;
+        const u = await r.json();
+        document.getElementById("userName").textContent = u.nome || u.email;
+        document.getElementById("userRole").textContent = u.role;
+        const ini = (u.nome || u.email).slice(0, 2).toUpperCase();
+        document.getElementById("userAvatar").textContent = ini;
+      } catch {}
+    })();
+
+    function switchTab(name) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(`tab-${name}`).classList.add("active");
+      event.target.classList.add("active");
+      if (name === "historico" && document.getElementById("tbHistorico").innerHTML === "")
+        carregarHistorico(null);
+    }
+
+    function toast(msg, dur = 2500) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), dur);
+    }
+
+    let _pendingAction = null;
+    function confirmar(titulo, corpo, fn) {
+      document.getElementById("modalTitle").textContent = titulo;
+      document.getElementById("modalBody").textContent = corpo;
+      _pendingAction = fn;
+      document.getElementById("confirmModal").classList.add("open");
+    }
+    function fecharModal() {
+      document.getElementById("confirmModal").classList.remove("open");
+      _pendingAction = null;
+    }
+    document.getElementById("modalConfirmBtn").onclick = () => {
+      fecharModal();
+      if (_pendingAction) _pendingAction();
+    };
+
+    function badgeStatus(s) {
+      const map = { PASS: "badge-pass", FAIL: "badge-fail", WARNING: "badge-warning" };
+      return `<span class="badge ${map[s] || ''}">${s}</span>`;
+    }
+    function badgeRole(r) {
+      const map = { admin: "badge-admin", "QA Lead": "badge-lead", "QA Analyst": "badge-qa" };
+      return `<span class="badge ${map[r] || 'badge-qa'}">${r}</span>`;
+    }
+    function fmtData(d) {
+      if (!d) return "—";
+      return new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    }
+    function progressBar(pct, cls) {
+      return `<div class="progress-wrap">
+        <div class="progress-bg"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+        <span style="font-size:0.78rem;color:var(--color-muted);min-width:36px">${pct}%</span>
+      </div>`;
+    }
+
+    async function carregarOverview() {
+      try {
+        const r = await fetch(`${API_URL}/admin/stats`, { headers });
+        if (r.status === 403) {
+          document.getElementById("statCards").innerHTML =
+            '<div class="empty">Sem permissão de admin.</div>'; return;
+        }
+        const d = await r.json();
+        renderStats(d);
+        renderChart(d.evolucao_14dias || []);
+        renderRanking(d.ranking_usuarios || []);
+      } catch (e) {
+        document.getElementById("statCards").innerHTML =
+          '<div class="empty">Erro ao carregar estatísticas.</div>';
+      }
+    }
+
+    function renderStats(d) {
+      const taxa = d.taxa_aprovacao ?? 0;
+      document.getElementById("statCards").innerHTML = `
+        <div class="stat-card">
+          <div class="num">${d.total_analises}</div>
+          <div class="lbl">Total de análises</div>
+        </div>
+        <div class="stat-card green">
+          <div class="num">${d.total_aprovadas}</div>
+          <div class="lbl">Aprovadas (PASS)</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="num">${d.total_alertas}</div>
+          <div class="lbl">Alertas (WARNING)</div>
+        </div>
+        <div class="stat-card red">
+          <div class="num">${d.total_falhas}</div>
+          <div class="lbl">Reprovadas (FAIL)</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">${taxa}%</div>
+          <div class="lbl">Taxa de aprovação</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">${d.total_usuarios}</div>
+          <div class="lbl">Usuários cadastrados</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">${d.total_usuarios_ativos}</div>
+          <div class="lbl">Usuários com análises</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">${d.score_medio ?? '—'}%</div>
+          <div class="lbl">Score médio global</div>
+        </div>`;
+    }
+
+    function renderChart(evolucao) {
+      const el = document.getElementById("chartEvolucao");
+      if (!evolucao.length) { el.innerHTML = '<div class="empty">Sem dados.</div>'; return; }
+      const max = Math.max(...evolucao.map(e => e.total), 1);
+      el.innerHTML = evolucao.map(e => {
+        const h = Math.round((e.total / max) * 84);
+        return `<div class="chart-col">
+          <span class="chart-num">${e.total}</span>
+          <div class="chart-bar" style="height:${h}px"></div>
+          <span class="chart-lbl">${e.dia.slice(5)}</span>
+        </div>`;
+      }).join("");
+    }
+
+    function renderRanking(ranking) {
+      const tb = document.getElementById("tbRanking");
+      if (!ranking.length) { tb.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma análise ainda.</td></tr>'; return; }
+      tb.innerHTML = ranking.map((u, i) => {
+        const taxa = u.total ? Math.round((u.aprovadas / u.total) * 100) : 0;
+        return `<tr>
+          <td>
+            <div style="font-weight:500">${i + 1}. ${escHtml(u.nome)}</div>
+            <div class="cell-muted">${escHtml(u.email)}</div>
+          </td>
+          <td>${u.total}</td>
+          <td style="min-width:140px">${progressBar(taxa, taxa >= 70 ? 'fill-green' : 'fill-red')}</td>
+          <td>${u.score_medio ?? '—'}%</td>
+          <td class="cell-muted">${fmtData(u.ultima_analise)}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    async function carregarUsuarios() {
+      const tb = document.getElementById("tbUsuarios");
+      tb.innerHTML = '<tr><td colspan="5" class="loading">Carregando...</td></tr>';
+      try {
+        const r = await fetch(`${API_URL}/admin/usuarios?limite=100`, { headers });
+        const d = await r.json();
+        todosUsuarios = d.usuarios || [];
+        renderUsuarios(todosUsuarios);
+      } catch {
+        tb.innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar usuários.</td></tr>';
+      }
+    }
+
+    function renderUsuarios(lista) {
+      const tb = document.getElementById("tbUsuarios");
+      const empty = document.getElementById("emptyUsuarios");
+      if (!lista.length) { tb.innerHTML = ""; empty.style.display = "block"; return; }
+      empty.style.display = "none";
+      const adminEmail = localStorage.getItem("email") || "";
+      tb.innerHTML = lista.map(u => `
+        <tr>
+          <td>
+            <div style="font-weight:500">${escHtml(u.nome || "—")}</div>
+            <div class="cell-muted">${escHtml(u.email)}</div>
+          </td>
+          <td>
+            <select class="role-select" onchange="alterarRole('${escHtml(u.email)}', this.value)"
+              ${u.email === adminEmail ? "disabled" : ""}>
+              <option value="QA Analyst" ${u.role === 'QA Analyst' ? 'selected' : ''}>QA Analyst</option>
+              <option value="QA Lead"    ${u.role === 'QA Lead'    ? 'selected' : ''}>QA Lead</option>
+              <option value="admin"      ${u.role === 'admin'      ? 'selected' : ''}>Admin</option>
+            </select>
+          </td>
+          <td>${u.total_analises}</td>
+          <td class="cell-muted">${fmtData(u.criado_em)}</td>
+          <td>
+            ${u.email !== adminEmail ? `
+              <button class="btn-danger-sm"
+                onclick="pedirRemover('${escHtml(u.email)}', '${escHtml(u.nome || u.email)}')">
+                Remover
+              </button>` : '<span class="cell-muted">—</span>'}
+          </td>
+        </tr>`).join("");
+    }
+
+    function filtrarUsuarios() {
+      const q = document.getElementById("searchUsuarios").value.toLowerCase();
+      const filtrado = todosUsuarios.filter(u =>
+        (u.nome || "").toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+      );
+      renderUsuarios(filtrado);
+    }
+
+    async function alterarRole(email, novoRole) {
+      try {
+        const r = await fetch(
+          `${API_URL}/admin/usuarios/${encodeURIComponent(email)}/role?novo_role=${encodeURIComponent(novoRole)}`,
+          { method: "PUT", headers }
+        );
+        const d = await r.json();
+        toast(r.ok ? d.msg : (d.detail || "Erro ao alterar role."));
+        if (r.ok) carregarUsuarios();
+      } catch { toast("Erro de conexão."); }
+    }
+
+    function pedirRemover(email, nome) {
+      confirmar(
+        "Remover usuário",
+        `Tem certeza que deseja remover "${nome}" (${email})? Todo o histórico de análises será apagado.`,
+        () => removerUsuario(email)
+      );
+    }
+
+    async function removerUsuario(email) {
+      try {
+        const r = await fetch(
+          `${API_URL}/admin/usuarios/${encodeURIComponent(email)}`,
+          { method: "DELETE", headers }
+        );
+        const d = await r.json();
+        toast(r.ok ? d.msg : (d.detail || "Erro ao remover."));
+        if (r.ok) carregarUsuarios();
+      } catch { toast("Erro de conexão."); }
+    }
+
+    async function carregarHistorico(statusFiltro) {
+      const tb = document.getElementById("tbHistorico");
+      const empty = document.getElementById("emptyHistorico");
+      const loading = document.getElementById("loadingHistorico");
+      tb.innerHTML = ""; empty.style.display = "none"; loading.style.display = "block";
+      try {
+        const qs = statusFiltro ? `&status_filtro=${statusFiltro}` : "";
+        const r = await fetch(`${API_URL}/admin/historico?limite=100${qs}`, { headers });
+        const lista = await r.json();
+        loading.style.display = "none";
+        if (!lista.length) { empty.style.display = "block"; return; }
+        tb.innerHTML = lista.map(h => `
+          <tr>
+            <td>
+              <div style="font-weight:500">${escHtml(h.usuario_nome)}</div>
+              <div class="cell-muted">${escHtml(h.usuario_email)}</div>
+            </td>
+            <td class="cell-muted" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              ${escHtml(h.nome_arquivo)}
+            </td>
+            <td>${badgeStatus(h.status)}</td>
+            <td>${h.score != null ? h.score + "%" : "—"}</td>
+            <td class="cell-muted">${escHtml(h.tipo_tela || "—")}</td>
+            <td class="cell-muted">${fmtData(h.data_analise)}</td>
+          </tr>`).join("");
+      } catch {
+        loading.style.display = "none";
+        tb.innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar histórico.</td></tr>';
+      }
+    }
+
+    function filtrarHistorico(status, btn) {
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      carregarHistorico(status);
+    }
+
+    function escHtml(v) {
+      return String(v || "").replace(/[&<>"']/g, c =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+      );
+    }
+    
+    function abrirModalCriar() {
+      document.getElementById("confirmModal").classList.add("open");
+      document.getElementById("modalTitle").textContent = "Criar novo usuário";
+      document.getElementById("modalBody").innerHTML = '<div style=\"display:flex;flex-direction:column;gap:10px\"><input id=\"novoNome\" placeholder=\"Nome completo\" style=\"padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px\"><input id=\"novoEmail\" placeholder=\"E-mail\" style=\"padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px\"><input id=\"novaSenha\" placeholder=\"Senha\" type=\"password\" style=\"padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px\"><select id=\"novoRole\" style=\"padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px\"><option value=\"QA Analyst\">QA Analyst</option><option value=\"QA Lead\">QA Lead</option><option value=\"admin\">Admin</option></select><div id=\"criarErro\" style=\"font-size:12px;color:red;display:none\"></div></div>';
+      document.getElementById("modalConfirmBtn").textContent = "Criar usuário";
+      document.getElementById("modalConfirmBtn").onclick = criarUsuario;
+    }
+    async function criarUsuario() {
+      const body = { nome: document.getElementById("novoNome").value.trim(), email: document.getElementById("novoEmail").value.trim(), senha: document.getElementById("novaSenha").value, role: document.getElementById("novoRole").value };
+      if (!body.nome || !body.email || !body.senha) { document.getElementById("criarErro").textContent = "Nome, e-mail e senha obrigatórios."; document.getElementById("criarErro").style.display = "block"; return; }
+      try {
+        const r = await fetch(`${API_URL}/admin/usuarios/criar`, { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        const d = await r.json();
+        if (!r.ok) { document.getElementById("criarErro").textContent = d.detail || "Erro."; document.getElementById("criarErro").style.display = "block"; return; }
+        fecharModal(); toast(d.msg); carregarUsuarios();
+      } catch { toast("Erro de conexão."); }
+    }
+    async function toggleAtivo(email, ativar) {
+      const r = await fetch(`${API_URL}/admin/usuarios/${encodeURIComponent(email)}/ativo?ativo=${ativar}`, { method: "PATCH", headers });
+      const d = await r.json(); toast(r.ok ? d.msg : (d.detail || "Erro.")); if (r.ok) carregarUsuarios();
+    }
+    function pedirToggle(email, ativar) { confirmar(ativar?"Ativar conta":"Desativar conta", `${ativar?"Reativar":"Desativar"} a conta de "${email}"?`, () => toggleAtivo(email, ativar)); }
+    async function gerarConvite() {
+      const r = await fetch(`${API_URL}/admin/convites/gerar`, { method: "POST", headers });
+      const d = await r.json();
+      if (!r.ok) { toast(d.detail||"Erro."); return; }
+      document.getElementById("codigoValor").textContent = d.codigo;
+      document.getElementById("codigoExpira").textContent = "Expira: " + new Date(d.expira_em+"Z").toLocaleString("pt-BR");
+      document.getElementById("codigoGerado").style.display = "block";
+      carregarConvites();
+    }
+    function copiarCodigo() {
+      navigator.clipboard.writeText(document.getElementById("codigoValor").textContent)
+        .then(() => toast("Código copiado!"));
+    }
+    function copiarLinkConvite() {
+      const codigo = document.getElementById("codigoValor").textContent;
+      const base   = window.location.href.replace(/admin\.html.*$/, "");
+      const link   = base + "cadastro.html?convite=" + encodeURIComponent(codigo);
+      navigator.clipboard.writeText(link).then(() => toast("Link de cadastro copiado! Envie para o usuário."));
+    }
+    async function carregarConvites() {
+      const tb = document.getElementById("tbConvites"); const empty = document.getElementById("emptyConvites"); if (!tb) return;
+      const r = await fetch(`${API_URL}/admin/convites`, { headers });
+      const lista = await r.json();
+      if (!lista.length) { tb.innerHTML=""; empty.style.display="block"; return; }
+      empty.style.display="none";
+      const cor = { ativo:"#16a34a", utilizado:"#6b778c", expirado:"#b91c1c" };
+      tb.innerHTML = lista.map(cv=>`<tr><td style="font-family:monospace;font-weight:700;letter-spacing:1px">${esc(cv.codigo)}</td><td class="cell-muted">${esc(cv.criado_por)}</td><td class="cell-muted">${esc(cv.usado_por)}</td><td class="cell-muted">${fmtData(cv.expira_em)}</td><td><span style="color:${cor[cv.status]||'#666'};font-weight:500;font-size:12px">${cv.status}</span></td></tr>`).join("");
+    }
+    function renderUsuarios(lista) {
+      const tb=document.getElementById("tbUsuarios"), empty=document.getElementById("emptyUsuarios");
+      if (!lista.length) { tb.innerHTML=""; empty.style.display="block"; return; }
+      empty.style.display="none";
+      const ae=(JSON.parse(localStorage.getItem("user")||"{}")).email||"";
+      tb.innerHTML=lista.map(u=>`<tr style="opacity:${u.ativo===false?.55:1}">
+        <td><div style="font-weight:500">${escHtml(u.nome||"—")}</div><div class="cell-muted">${escHtml(u.email)}</div></td>
+        <td><select class="role-select" onchange="alterarRole('${escHtml(u.email)}',this.value)" ${u.email===ae?"disabled":""}><option value="QA Analyst" ${u.role==="QA Analyst"?"selected":""}>QA Analyst</option><option value="QA Lead" ${u.role==="QA Lead"?"selected":""}>QA Lead</option><option value="admin" ${u.role==="admin"?"selected":""}>Admin</option></select></td>
+        <td>${u.total_analises}</td>
+        <td class="cell-muted">${fmtData(u.ultimo_login)}</td>
+        <td class="cell-muted">${escHtml(u.criado_por||"—")}</td>
+        <td>${u.ativo!==false?'<span style="color:#16a34a;font-size:12px;font-weight:500">● Ativo</span>':'<span style="color:#b91c1c;font-size:12px;font-weight:500">● Inativo</span>'}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap">${u.email!==ae?`${u.ativo!==false?`<button class="btn-danger-sm" onclick="pedirToggle('${escHtml(u.email)}',false)">Desativar</button>`:`<button style="padding:4px 10px;border-radius:6px;border:1px solid #86efac;background:#dcfce7;color:#15803d;font-size:.78rem;cursor:pointer" onclick="pedirToggle('${escHtml(u.email)}',true)">Ativar</button>`}<button class="btn-danger-sm" onclick="pedirRemover('${escHtml(u.email)}','${escHtml(u.nome||u.email)}')">Remover</button>`:'<span class="cell-muted">—</span>'}</td>
+      </tr>`).join("");
+    }
+    carregarOverview();
+    carregarUsuarios();
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+venv/
+env/
+.venv/
+ 
+# =========================
+# Banco de dados
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+ 
+# =========================
+# Segredos
+# =========================
+.env
+*.key
+*.pem
+ 
+# =========================
+# Modelo YOLOv8 — pesos
+# =========================
+*.pt
+*.onnx
+ 
+# Mantém só o melhor run (descomente a linha abaixo e ajuste se quiser subir o best.pt)
+# !runs/classify/visionia_cls22/weights/best.pt
+ 
+# =========================
+# Runs antigos e imagens de treino
+# =========================
+runs/classify/*/train_batch*
+runs/classify/*/val_batch*
+runs/classify/*/events.out*
+ 
+# =========================
+# Dataset — imagens (não sobe para o GitHub)
+# =========================
+dataset/
+ 
+# =========================
+# Sistema operacional
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+ 
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+ 
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+ 
+# =========================
+# Criado localmente
+# =========================
+criar_admin.py

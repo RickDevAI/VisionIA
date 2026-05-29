@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - VisionIA</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <script>
+    if (!localStorage.getItem("token")) {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="assets/logo.png" class="logo-topbar" alt="Logo do VisionIA">
+    </div>
+
+    <div class="user-access" onclick="toggleMenu()">
+      <div class="user-avatar" id="userAvatar">US</div>
+
+      <div class="user-info">
+        <div class="user-name" id="userName"></div>
+        <div class="user-role" id="userRole"></div>
+      </div>
+
+      <div class="dropdown-menu" id="userMenu">
+        <div class="dropdown-item" onclick="window.location.href='stats.html'">Estatísticas</div>
+        <div class="dropdown-item" onclick="irConfig()">Configurações</div>
+        <div class="dropdown-item" id="adminLink" style="display:none" onclick="window.location.href='admin.html'">Painel Admin</div>
+        <div class="dropdown-item logout" onclick="logout()">Sair</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+
+      <div class="issue-header">
+        <div>
+          <div class="issue-key">GMS-1842</div>
+          <div class="issue-title">Pré-validação de GMS - Avaliação de Screenshots</div>
+          <span class="badge yellow">Em análise</span>
+        </div>
+      </div>
+
+      <div class="section-title">Sobre o sistema</div>
+      <div class="description">
+        O sistema realiza uma pré-validação inteligente de screenshots GMS, identificando inconsistências visuais, ausência de elementos obrigatórios e possíveis evidências fora do padrão esperado.
+      </div>
+
+      <div class="section-title">Screenshots anexadas</div>
+            <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="screenshot" onclick="abrirScreenshots()">Selecionar Screenshots</button>
+        <input type="file" id="uploadScreenshots" multiple accept="image/*" style="display:none">
+      </div>
+      <div class="attachments" id="attachmentsPreview"></div>
+
+      <div class="section-title">Resultado da IA</div>
+      <div class="comment-box" id="resultado">
+        Aguardando análise...
+      </div>
+
+      <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="button" onclick="rodarAnalise()">Rodar Pré-validação</button>
+        <button class="button2" onclick="limparScreenshots()">Limpar</button>
+        <input type="file" id="uploadScreenshots" multiple accept="image/*" style="display:none">
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/script.js"></script>
+<script src="js/stats.js"></script>
+</body>
+</html>
