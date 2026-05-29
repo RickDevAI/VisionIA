@@ -1,7 +1,7 @@
 # 🚀 VisionIA - Sistema de Validação Automática de Screenshots com IA
 
 <div align="center">
-[![Logo.jpg](https://i.postimg.cc/wBkRvrt7/Logo.jpg)](https://postimg.cc/SXJx1Dfh)
+<a href='https://postimg.cc/SXJx1Dfh' target='_blank'><img src='https://i.postimg.cc/SXJx1Dfh/Logo.jpg' border='0' alt='Logo'></a>
 
 **Uma plataforma inteligente de pré-validação de screenshots usando visão computacional**
 
