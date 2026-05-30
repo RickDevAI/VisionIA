@@ -100,12 +100,25 @@
 </head>
 <body>
 
-  <script>
-    const _tok = localStorage.getItem("token");
-    const _user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!_tok) { window.location.href = "login.html"; }
-    if (_user.role !== "admin") { window.location.href = "index.html"; }
-  </script>
+<script>
+  const _tok = localStorage.getItem("token");
+
+  let _user = {};
+
+  try {
+    _user = JSON.parse(localStorage.getItem("user") || "{}");
+  } catch (error) {
+    _user = {};
+  }
+
+  const role = String(_user.role || "").trim().toLowerCase();
+
+  if (!_tok) {
+    window.location.replace("/login.html");
+  } else if (role !== "admin" && role !== "administrador") {
+    window.location.replace("/index.html");
+  }
+</script>
 
   <div class="topbar">
     <div class="topbar-left">
