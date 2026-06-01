@@ -816,19 +816,29 @@ def admin_listar_usuarios(
     """Lista todos os usuários cadastrados (somente admin)."""
     conn = conectar()
     try:
+        # Busca usuários sem JOIN para compatibilidade com Turso
         rows = conn.execute("""
-            SELECT
-                u.id, u.nome, u.email, u.telefone,
-                u.role, u.receber_relatorios, u.criado_em,
-                COUNT(a.id) AS total_analises
-            FROM usuarios u
-            LEFT JOIN analises a ON a.usuario_email = u.email
-            GROUP BY u.id
-            ORDER BY u.criado_em DESC
+            SELECT id, nome, email, telefone, role,
+                   receber_relatorios, criado_em,
+                   ativo, criado_por, ultimo_login
+            FROM usuarios
+            ORDER BY criado_em DESC
             LIMIT ? OFFSET ?
         """, (min(limite, 100), offset)).fetchall()
 
-        total = conn.execute("SELECT COUNT(*) AS c FROM usuarios").fetchone()["c"]
+        total = conn.execute(
+            "SELECT COUNT(*) AS c FROM usuarios"
+        ).fetchone()["c"]
+
+        # Conta análises separadamente para cada usuário
+        contagem = {}
+        for r in rows:
+            cur = conn.execute(
+                "SELECT COUNT(*) AS total FROM analises WHERE usuario_email = ?",
+                (r["email"],)
+            ).fetchone()
+            contagem[r["email"]] = cur["total"] if cur else 0
+
     finally:
         conn.close()
 
@@ -836,52 +846,22 @@ def admin_listar_usuarios(
         "total": total,
         "usuarios": [
             {
-                "id":                  r["id"],
-                "nome":                r["nome"] or "",
-                "email":               r["email"],
-                "telefone":            r["telefone"] or "",
-                "role":                r["role"],
-                "receber_relatorios":  bool(r["receber_relatorios"]),
-                "criado_em":           r["criado_em"],
-                "total_analises":      r["total_analises"],
+                "id":                 r["id"],
+                "nome":               r["nome"] or "",
+                "email":              r["email"],
+                "telefone":           r["telefone"] or "",
+                "role":               r["role"],
+                "receber_relatorios": bool(r["receber_relatorios"]),
+                "criado_em":          r["criado_em"] or "",
+                "ativo":              bool(r["ativo"]) if r["ativo"] is not None else True,
+                "criado_por":         r["criado_por"] or "—",
+                "ultimo_login":       r["ultimo_login"] or "—",
+                "total_analises":     contagem.get(r["email"], 0),
             }
             for r in rows
         ],
     }
 
-
-
-
-class AdminCriarUsuario(BaseModel):
-    nome: str
-    email: str
-    senha: str
-    telefone: Optional[str] = None
-    role: str = "QA Analyst"
-
-@app.post("/admin/usuarios/criar", tags=["admin"])
-def admin_criar_usuario(
-    data: AdminCriarUsuario,
-    admin_email: str = Depends(verificar_admin),
-):
-    """Cria um novo usuário diretamente (somente admin, sem convite)."""
-    if data.role not in ROLES_VALIDAS:
-        raise HTTPException(status_code=400, detail=f"Role inválido. Use: {ROLES_VALIDAS}")
-    if not senha_forte(data.senha):
-        raise HTTPException(status_code=400, detail="Senha fraca. Use maiúscula, minúscula, número e caractere especial.")
-    conn = conectar()
-    try:
-        conn.execute(
-            "INSERT INTO usuarios (nome, email, senha, telefone, role) VALUES (?, ?, ?, ?, ?)",
-            (data.nome, data.email.lower(), pwd_context.hash(data.senha), data.telefone, data.role)
-        )
-        conn.commit()
-        return {"msg": f"Usuário {data.email} criado com role '{data.role}'."}
-    except Exception as _e:
-        if "UNIQUE" not in str(_e) and "unique" not in str(_e): raise
-        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
-    finally:
-        conn.close()
 
 @app.put("/admin/usuarios/{usuario_email}/role", tags=["admin"])
 def admin_alterar_role(
