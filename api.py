@@ -820,7 +820,7 @@ def admin_listar_usuarios(
         rows = conn.execute("""
             SELECT id, nome, email, telefone, role,
                    receber_relatorios, criado_em,
-                   ativo, criado_por, ultimo_login
+                   criado_por, ultimo_login
             FROM usuarios
             ORDER BY criado_em DESC
             LIMIT ? OFFSET ?
@@ -853,7 +853,7 @@ def admin_listar_usuarios(
                 "role":               r["role"],
                 "receber_relatorios": bool(r["receber_relatorios"]),
                 "criado_em":          r["criado_em"] or "",
-                "ativo":              bool(r["ativo"]) if r["ativo"] is not None else True,
+                "ativo":              True,
                 "criado_por":         r["criado_por"] or "—",
                 "ultimo_login":       r["ultimo_login"] or "—",
                 "total_analises":     contagem.get(r["email"], 0),
@@ -862,6 +862,36 @@ def admin_listar_usuarios(
         ],
     }
 
+class AdminCriarUsuario(BaseModel):
+    nome: str
+    email: str
+    senha: str
+    telefone: Optional[str] = None
+    role: str = "QA Analyst"
+
+@app.post("/admin/usuarios/criar", tags=["admin"])
+def admin_criar_usuario(
+    data: AdminCriarUsuario,
+    admin_email: str = Depends(verificar_admin),
+):
+    """Cria um novo usuário diretamente (somente admin, sem convite)."""
+    if data.role not in ROLES_VALIDAS:
+        raise HTTPException(status_code=400, detail=f"Role inválido. Use: {ROLES_VALIDAS}")
+    if not senha_forte(data.senha):
+        raise HTTPException(status_code=400, detail="Senha fraca.")
+    conn = conectar()
+    try:
+        conn.execute(
+            "INSERT INTO usuarios (nome, email, senha, telefone, role) VALUES (?, ?, ?, ?, ?)",
+            (data.nome, data.email.lower(), pwd_context.hash(data.senha), data.telefone, data.role)
+        )
+        conn.commit()
+        return {"msg": f"Usuário {data.email} criado com role '{data.role}'."}
+    except Exception as _e:
+        if "UNIQUE" not in str(_e) and "unique" not in str(_e): raise
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
+    finally:
+        conn.close()
 
 @app.put("/admin/usuarios/{usuario_email}/role", tags=["admin"])
 def admin_alterar_role(
