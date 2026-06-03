@@ -443,6 +443,13 @@ async def login(data: UserAuth, request: Request):
             "SELECT nome, email, senha, role FROM usuarios WHERE email = ?",
             (data.email.lower(),)
         ).fetchone()
+
+        if row and pwd_context.verify(data.senha, row["senha"]):
+            conn.execute(
+                "UPDATE usuarios SET ultimo_login = datetime('now') WHERE email = ?",
+                (data.email.lower(),)
+            )
+            conn.commit()
     finally:
         conn.close()
 
@@ -855,7 +862,7 @@ def admin_listar_usuarios(
                 "criado_em":          r["criado_em"] or "",
                 "ativo":              True,
                 "criado_por":         r["criado_por"] or "—",
-                "ultimo_login":       r["ultimo_login"] or "—",
+                "ultimo_login":       r["ultimo_login"] if r["ultimo_login"] else None,
                 "total_analises":     contagem.get(r["email"], 0),
             }
             for r in rows
