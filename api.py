@@ -929,6 +929,27 @@ def admin_alterar_role(
 
     return {"msg": f"Role de '{usuario_email}' alterado para '{novo_role}'."}
 
+@app.patch("/admin/usuarios/{usuario_email}/ativo", tags=["admin"])
+def admin_toggle_ativo(
+    usuario_email: str,
+    ativo: bool,
+    admin_email: str = Depends(verificar_admin),
+):
+    """Ativa ou desativa um usuário sem removê-lo."""
+    if usuario_email == admin_email:
+        raise HTTPException(status_code=400, detail="Você não pode desativar sua própria conta.")
+    conn = conectar()
+    try:
+        cur = conn.execute(
+            "UPDATE usuarios SET ativo = ? WHERE email = ?",
+            (1 if ativo else 0, usuario_email.lower())
+        )
+        conn.commit()
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+        return {"msg": f"Conta {'ativada' if ativo else 'desativada'} com sucesso."}
+    finally:
+        conn.close()
 
 @app.delete("/admin/usuarios/{usuario_email}", tags=["admin"])
 def admin_remover_usuario(
