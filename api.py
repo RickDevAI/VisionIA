@@ -446,7 +446,7 @@ async def login(data: UserAuth, request: Request):
 
         if row and pwd_context.verify(data.senha, row["senha"]):
             conn.execute(
-                "UPDATE usuarios SET ultimo_login = datetime('now') WHERE email = ?",
+                "UPDATE usuarios SET ultimo_login = datetime('now', '-4 hours') WHERE email = ?",
                 (data.email.lower(),)
             )
             conn.commit()
