@@ -18,7 +18,6 @@ DB_PATH     = os.getenv("DB_PATH", "usuarios.db")
 
 _USANDO_TURSO = bool(TURSO_URL and TURSO_TOKEN)
 
-# Converte URL libsql:// para https://
 if _USANDO_TURSO and TURSO_URL.startswith("libsql://"):
     _HTTP_URL = "https://" + TURSO_URL[len("libsql://"):]
 else:
@@ -47,15 +46,14 @@ class TursoConnection:
         """Executa um statement via HTTP e retorna o resultado."""
         stmt = {"type": "execute", "stmt": {"sql": sql}}
         if params:
-            stmt["stmt"]["args"] = [
-                {"type": "text", "value": str(p)} if isinstance(p, str)
-                else {"type": "integer", "value": str(p)} if isinstance(p, int)
-                else {"type": "float", "value": str(p)} if isinstance(p, float)
-                else {"type": "null"} if p is None
-                else {"type": "text", "value": str(p)}
-                for p in params
-            ]
-
+       stmt["stmt"]["args"] = [
+           {"type": "null"} if p is None
+           else {"type": "integer", "value": str(int(p))} if isinstance(p, int) and not isinstance(p, bool)
+           else {"type": "float",   "value": str(p)} if isinstance(p, float)
+           else {"type": "text",    "value": str(p)}
+           for p in params
+           ]
+      
         payload = json.dumps({"requests": [stmt, {"type": "close"}]}).encode()
         req = urllib.request.Request(self._url, data=payload, headers=self._headers, method="POST")
 
@@ -86,10 +84,10 @@ class TursoConnection:
         return TursoDirectCursor(self)
 
     def commit(self):
-        pass  # Turso auto-commita
+        pass  
 
     def close(self):
-        pass  # HTTP é stateless, nada a fechar
+        pass 
 
     @property
     def total_changes(self):
