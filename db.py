@@ -17,10 +17,6 @@ else:
 
 
 class Row(dict):
-    """
-    Emula sqlite3.Row, permitindo acesso por nome da coluna.
-    """
-
     def __getitem__(self, key):
         if isinstance(key, int):
             return list(self.values())[key]
@@ -34,28 +30,11 @@ def _converter_parametro(valor):
     if isinstance(valor, bool):
         return {"type": "integer", "value": int(valor)}
 
-<<<<<<< HEAD
-    def _http_execute(self, sql, params=()):
-        """Executa um statement via HTTP e retorna o resultado."""
-        stmt = {"type": "execute", "stmt": {"sql": sql}}
-        if params:
-       stmt["stmt"]["args"] = [
-           {"type": "null"} if p is None
-           else {"type": "integer", "value": str(int(p))} if isinstance(p, int) and not isinstance(p, bool)
-           else {"type": "float",   "value": str(p)} if isinstance(p, float)
-           else {"type": "text",    "value": str(p)}
-           for p in params
-           ]
-      
-        payload = json.dumps({"requests": [stmt, {"type": "close"}]}).encode()
-        req = urllib.request.Request(self._url, data=payload, headers=self._headers, method="POST")
-=======
     if isinstance(valor, int):
         return {"type": "integer", "value": valor}
 
     if isinstance(valor, float):
         return {"type": "float", "value": valor}
->>>>>>> 39717d1 (Corrige db.py para conexão com Turso)
 
     return {"type": "text", "value": str(valor)}
 
@@ -73,19 +52,11 @@ def _parse_valor(valor):
     if tipo == "null":
         return None
 
-<<<<<<< HEAD
-    def commit(self):
-        pass  
-
-    def close(self):
-        pass 
-=======
     if tipo == "integer":
         return int(val) if val is not None else None
 
     if tipo == "float":
         return float(val) if val is not None else None
->>>>>>> 39717d1 (Corrige db.py para conexão com Turso)
 
     return val
 
@@ -137,11 +108,6 @@ class TursoDirectCursor:
 
 
 class TursoConnection:
-    """
-    Conexão com Turso via HTTP REST API.
-    Usa apenas bibliotecas padrão do Python.
-    """
-
     def __init__(self):
         self._url = f"{HTTP_URL}/v2/pipeline"
         self._headers = {
@@ -229,12 +195,6 @@ class TursoConnection:
 
 
 def conectar():
-    """
-    Retorna conexão com o banco.
-    - Local: SQLite
-    - Produção: Turso, se TURSO_URL e TURSO_TOKEN existirem
-    """
-
     if _USANDO_TURSO:
         return TursoConnection()
 
