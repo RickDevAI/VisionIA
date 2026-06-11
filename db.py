@@ -1,47 +1,40 @@
-"""
-db.py — camada de abstração de banco de dados.
-
-- Sem TURSO_URL: SQLite local (desenvolvimento)
-- Com TURSO_URL + TURSO_TOKEN: Turso via HTTP REST (produção)
-  Usa a API HTTP do Turso em vez de WebSocket — mais estável em produção.
-"""
-
 import os
 import sqlite3 as _sqlite3
 import json
 import urllib.request
 import urllib.error
 
-TURSO_URL   = os.getenv("TURSO_URL", "").rstrip("/")
+TURSO_URL = os.getenv("TURSO_URL", "").rstrip("/")
 TURSO_TOKEN = os.getenv("TURSO_TOKEN", "")
-DB_PATH     = os.getenv("DB_PATH", "usuarios.db")
+DB_PATH = os.getenv("DB_PATH", "usuarios.db")
 
 _USANDO_TURSO = bool(TURSO_URL and TURSO_TOKEN)
 
 if _USANDO_TURSO and TURSO_URL.startswith("libsql://"):
-    _HTTP_URL = "https://" + TURSO_URL[len("libsql://"):]
+    HTTP_URL = "https://" + TURSO_URL[len("libsql://"):]
 else:
-    _HTTP_URL = TURSO_URL
+    HTTP_URL = TURSO_URL
 
 
 class Row(dict):
-    """Dict com acesso por índice, emula sqlite3.Row."""
+    """
+    Emula sqlite3.Row, permitindo acesso por nome da coluna.
+    """
+
     def __getitem__(self, key):
         if isinstance(key, int):
             return list(self.values())[key]
         return super().__getitem__(key)
 
 
-class TursoConnection:
-    """Conexão com Turso via HTTP REST API."""
+def _converter_parametro(valor):
+    if valor is None:
+        return {"type": "null"}
 
-    def __init__(self):
-        self._url = f"{_HTTP_URL}/v2/pipeline"
-        self._headers = {
-            "Authorization": f"Bearer {TURSO_TOKEN}",
-            "Content-Type": "application/json",
-        }
+    if isinstance(valor, bool):
+        return {"type": "integer", "value": int(valor)}
 
+<<<<<<< HEAD
     def _http_execute(self, sql, params=()):
         """Executa um statement via HTTP e retorna o resultado."""
         stmt = {"type": "execute", "stmt": {"sql": sql}}
@@ -56,53 +49,59 @@ class TursoConnection:
       
         payload = json.dumps({"requests": [stmt, {"type": "close"}]}).encode()
         req = urllib.request.Request(self._url, data=payload, headers=self._headers, method="POST")
+=======
+    if isinstance(valor, int):
+        return {"type": "integer", "value": valor}
 
-        try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read())
-        except urllib.error.HTTPError as e:
-            body = e.read().decode()
-            raise RuntimeError(f"Turso HTTP {e.code}: {body}")
+    if isinstance(valor, float):
+        return {"type": "float", "value": valor}
+>>>>>>> 39717d1 (Corrige db.py para conexão com Turso)
 
-        result = data["results"][0]
-        if result["type"] == "error":
-            raise RuntimeError(f"Turso error: {result['error']['message']}")
+    return {"type": "text", "value": str(valor)}
 
-        return result["response"]["result"]
 
-    def execute(self, sql, params=()):
-        result = self._http_execute(sql, params)
-        return TursoCursor(result)
+def _parse_valor(valor):
+    if valor is None:
+        return None
 
-    def executescript(self, sql):
-        stmts = [s.strip() for s in sql.split(";") if s.strip()]
-        for stmt in stmts:
-            self._http_execute(stmt)
-        return self
+    if not isinstance(valor, dict):
+        return valor
 
-    def cursor(self):
-        return TursoDirectCursor(self)
+    tipo = valor.get("type")
+    val = valor.get("value")
 
+    if tipo == "null":
+        return None
+
+<<<<<<< HEAD
     def commit(self):
         pass  
 
     def close(self):
         pass 
+=======
+    if tipo == "integer":
+        return int(val) if val is not None else None
 
-    @property
-    def total_changes(self):
-        return 1
+    if tipo == "float":
+        return float(val) if val is not None else None
+>>>>>>> 39717d1 (Corrige db.py para conexão com Turso)
+
+    return val
 
 
 class TursoCursor:
-    def __init__(self, result):
-        cols = [c["name"] for c in result.get("cols", [])]
+    def __init__(self, resultado):
+        cols = [col["name"] for col in resultado.get("cols", [])]
+        rows = resultado.get("rows", [])
+
         self._rows = [
-            Row(zip(cols, [_parse_val(v) for v in row]))
-            for row in result.get("rows", [])
+            Row(zip(cols, [_parse_valor(valor) for valor in row]))
+            for row in rows
         ]
-        self.rowcount  = result.get("affected_row_count", len(self._rows))
-        self.lastrowid = result.get("last_insert_rowid")
+
+        self.rowcount = resultado.get("affected_row_count", len(self._rows))
+        self.lastrowid = resultado.get("last_insert_rowid")
 
     def fetchone(self):
         return self._rows[0] if self._rows else None
@@ -116,7 +115,7 @@ class TursoCursor:
 
 class TursoDirectCursor:
     def __init__(self, conn):
-        self._conn   = conn
+        self._conn = conn
         self._cursor = None
 
     def execute(self, sql, params=()):
@@ -137,21 +136,105 @@ class TursoDirectCursor:
         return self._cursor.rowcount if self._cursor else 0
 
 
-def _parse_val(v):
-    """Converte valor do formato Turso para Python."""
-    if v is None or (isinstance(v, dict) and v.get("type") == "null"):
-        return None
-    if isinstance(v, dict):
-        t = v.get("type", "text")
-        val = v.get("value")
-        if t == "integer": return int(val) if val is not None else None
-        if t == "float":   return float(val) if val is not None else None
-        return val
-    return v
+class TursoConnection:
+    """
+    Conexão com Turso via HTTP REST API.
+    Usa apenas bibliotecas padrão do Python.
+    """
+
+    def __init__(self):
+        self._url = f"{HTTP_URL}/v2/pipeline"
+        self._headers = {
+            "Authorization": f"Bearer {TURSO_TOKEN}",
+            "Content-Type": "application/json",
+        }
+
+    def _http_execute(self, sql, params=()):
+        stmt = {
+            "type": "execute",
+            "stmt": {
+                "sql": sql
+            }
+        }
+
+        if params:
+            stmt["stmt"]["args"] = [
+                _converter_parametro(param)
+                for param in params
+            ]
+
+        payload = json.dumps({
+            "requests": [
+                stmt,
+                {"type": "close"}
+            ]
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            self._url,
+            data=payload,
+            headers=self._headers,
+            method="POST"
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8")
+            raise RuntimeError(f"Turso HTTP {e.code}: {body}") from e
+        except Exception as e:
+            raise RuntimeError(f"Erro ao conectar no Turso: {e}") from e
+
+        resultado_pipeline = data["results"][0]
+
+        if resultado_pipeline.get("type") == "error":
+            erro = resultado_pipeline.get("error", {})
+            mensagem = erro.get("message", "Erro desconhecido no Turso")
+            raise RuntimeError(f"Turso error: {mensagem}")
+
+        response = resultado_pipeline.get("response", {})
+        result = response.get("result", {})
+
+        return result
+
+    def execute(self, sql, params=()):
+        resultado = self._http_execute(sql, params)
+        return TursoCursor(resultado)
+
+    def executescript(self, sql):
+        comandos = [
+            comando.strip()
+            for comando in sql.split(";")
+            if comando.strip()
+        ]
+
+        for comando in comandos:
+            self._http_execute(comando)
+
+        return self
+
+    def cursor(self):
+        return TursoDirectCursor(self)
+
+    def commit(self):
+        pass
+
+    def close(self):
+        pass
+
+    @property
+    def total_changes(self):
+        return 1
 
 
 def conectar():
-    """Retorna conexão com o banco."""
+    """
+    Retorna conexão com o banco.
+    - Local: SQLite
+    - Produção: Turso, se TURSO_URL e TURSO_TOKEN existirem
+    """
+
     if _USANDO_TURSO:
         return TursoConnection()
 
