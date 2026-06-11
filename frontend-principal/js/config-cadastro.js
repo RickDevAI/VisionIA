@@ -105,7 +105,7 @@ async function salvarCadastro() {
 
     if (_modoAdmin) {
       const token = localStorage.getItem("token");
-      if (!token) { window.location.href = "login.html"; return; }
+      if (!token) { window.location.href = "/login"; return; }
       const role = document.getElementById("novoRole")?.value || "QA Analyst";
       res = await fetch(`${API_URL}/admin/usuarios/criar`, {
         method: "POST",

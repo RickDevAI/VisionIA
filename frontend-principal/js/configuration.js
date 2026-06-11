@@ -88,7 +88,7 @@ async function carregarUsuario() {
   const userLocal = getUserLocal();
 
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "/login";
     return;
   }
 
@@ -105,7 +105,7 @@ async function carregarUsuario() {
 
     if (res.status === 401) {
       limparSessao();
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return;
     }
 
@@ -131,7 +131,7 @@ async function salvarPerfil() {
   const token = getToken();
 
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "/login";
     return;
   }
 
@@ -166,7 +166,7 @@ async function salvarPerfil() {
     if (res.status === 401) {
       alert("Sessão expirada. Faça login novamente.");
       limparSessao();
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return;
     }
 
@@ -193,7 +193,7 @@ async function salvarPerfil() {
     if (email !== emailAntigo && !data.token) {
       alert("Perfil atualizado com sucesso. Faça login novamente.");
       limparSessao();
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return;
     }
 
@@ -209,12 +209,12 @@ function abrirSuporte() {
 }
 
 function voltarInicio() {
-  window.location.href = "index.html";
+  window.location.href = "/index";
 }
 
 function logout() {
   limparSessao();
-  window.location.href = "login.html";
+  window.location.href = "/login";
 }
 
 function toggleMenu() {

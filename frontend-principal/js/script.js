@@ -67,7 +67,7 @@ function atualizarCabecalhoUsuario(user) {
 async function carregarUsuarioDashboard() {
   const token = getToken();
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "/login";
     return false;
   }
 
@@ -86,7 +86,7 @@ async function carregarUsuarioDashboard() {
     if (res.status === 401) {
       alert("Sessão expirada. Faça login novamente.");
       limparSessao();
-      window.location.href = "login.html";
+      window.location.href = "/login";
       return false;
     }
 
@@ -245,11 +245,11 @@ function toggleMenu() {
 
 function logout() {
   limparSessao();
-  window.location.href = "login.html";
+  window.location.href = "/login";
 }
 
 function irConfig() {
-  window.location.href = "config.html";
+  window.location.href = "/config";
 }
 
 function limparScreenshots() {
@@ -324,7 +324,7 @@ async function rodarAnalise() {
 
   const token = getToken();
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "/login";
     return;
   }
 
@@ -396,7 +396,7 @@ async function rodarAnalise() {
         if (response.status === 401) {
           alert("Sessão expirada. Faça login novamente.");
           limparSessao();
-          window.location.href = "login.html";
+          window.location.href = "/login";
           return;
         }
 

@@ -114,9 +114,9 @@
   const role = String(_user.role || "").trim().toLowerCase();
 
   if (!_tok) {
-    window.location.replace("/login.html");
+    window.location.replace("/login");
   } else if (role !== "admin" && role !== "administrador") {
-    window.location.replace("/index.html");
+    window.location.replace("/index");
   }
 </script>
 
@@ -131,8 +131,8 @@
         <div class="user-role" id="userRole"></div>
       </div>
       <div class="dropdown-menu" id="userMenu">
-        <div class="dropdown-item" onclick="window.location.href='stats.html'">Estatísticas</div>
-        <div class="dropdown-item" onclick="window.location.href='index.html'">Dashboard</div>
+        <div class="dropdown-item" onclick="window.location.href='/stats'">Estatísticas</div>
+        <div class="dropdown-item" onclick="window.location.href='/index'">Dashboard</div>
         <div class="dropdown-item logout" onclick="logout()">Sair</div>
       </div>
     </div>
@@ -294,7 +294,7 @@
       document.getElementById("userMenu").classList.toggle("active");
     }
     function logout() {
-      localStorage.clear(); window.location.href = "login.html";
+      localStorage.clear(); window.location.href = "/login";
     }
     function irConfig() {
       window.location.href = "configuration.html";
