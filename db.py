@@ -28,13 +28,13 @@ def _converter_parametro(valor):
         return {"type": "null"}
 
     if isinstance(valor, bool):
-        return {"type": "integer", "value": int(valor)}
+        return {"type": "integer", "value": str(int(valor)}
 
     if isinstance(valor, int):
-        return {"type": "integer", "value": valor}
+        return {"type": "integer", "value": str(valor}
 
     if isinstance(valor, float):
-        return {"type": "float", "value": valor}
+        return {"type": "float", "value": str(valor}
 
     return {"type": "text", "value": str(valor)}
 
