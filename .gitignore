@@ -30,7 +30,6 @@ env/
 # Modelo YOLOv8 — pesos
 # =========================
 *.pt
-*.onnx
  
 # Mantém só o melhor run (descomente a linha abaixo e ajuste se quiser subir o best.pt)
 # !runs/classify/visionia_cls22/weights/best.pt
