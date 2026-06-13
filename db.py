@@ -34,7 +34,7 @@ def _converter_parametro(valor):
         return {"type": "integer", "value": str(valor)}
 
     if isinstance(valor, float):
-        return {"type": "float", "value": str(valor)}
+        return {"type": "float", "value": valor}
 
     return {"type": "text", "value": str(valor)}
 
