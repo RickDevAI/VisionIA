@@ -1,9 +1,22 @@
+# ── Web framework ──
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
+python-multipart==0.0.12
+ 
+# ── IA — ultralytics com torch CPU (muito menor que versão GPU) ──
 ultralytics==8.3.0
+torch==2.2.0+cpu
+torchvision==0.17.0+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+ 
+# ── Imagem e dados ──
 Pillow==11.0.0
 numpy==1.26.4
-python-multipart==0.0.12
+ 
+# ── Banco de dados ──
+libsql-client==0.3.1
+ 
+# ── Auth e segurança ──
 pydantic[email]==2.10.6
 python-jose[cryptography]==3.3.0
 python-dotenv==1.0.1
