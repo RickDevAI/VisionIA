@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionIA — Acesso Demo</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--color-bg, #f4f6f9);
+      flex-direction: column;
+      gap: 16px;
+    }
+    .demo-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .demo-logo { width: 80px; margin-bottom: 16px; }
+    .demo-title { font-size: 22px; font-weight: 700; color: #0f2744; margin-bottom: 6px; }
+    .demo-sub { font-size: 14px; color: #64748b; margin-bottom: 28px; }
+    .demo-spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #22c55e;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .demo-status { font-size: 13px; color: #64748b; }
+    .demo-error { font-size: 13px; color: #dc2626; margin-top: 12px; display: none; }
+    .demo-btn {
+      display: inline-block; margin-top: 16px;
+      padding: 10px 24px; background: #0f2744;
+      color: #fff; border-radius: 8px; font-size: 14px;
+      text-decoration: none; cursor: pointer; border: none;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-card">
+    <img src="assets/logo.png" alt="VisionIA" class="demo-logo">
+    <div class="demo-title">Acesso Demonstração</div>
+    <div class="demo-sub">Entrando no sistema automaticamente...</div>
+    <div class="demo-spinner" id="spinner"></div>
+    <div class="demo-status" id="status">Autenticando...</div>
+    <div class="demo-error" id="erro">Não foi possível conectar. Tente novamente.</div>
+    <button class="demo-btn" id="btnTentar" onclick="fazerLogin()">Tentar novamente</button>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+    const DEMO_EMAIL = "demo@visionia.com";
+    const DEMO_SENHA = "Demo@2025!";
+
+    async function fazerLogin() {
+      const status  = document.getElementById("status");
+      const spinner = document.getElementById("spinner");
+      const erro    = document.getElementById("erro");
+      const btn     = document.getElementById("btnTentar");
+
+      spinner.style.display = "block";
+      erro.style.display    = "none";
+      btn.style.display     = "none";
+      status.textContent    = "Autenticando...";
+
+      try {
+        const res = await fetch(`${API_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: DEMO_EMAIL, senha: DEMO_SENHA })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Erro ao autenticar");
+        }
+
+        // Salva sessão
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify({
+          nome:  data.nome  || "Demo",
+          email: data.email || DEMO_EMAIL,
+          role:  data.role  || "QA Analyst"
+        }));
+
+        status.textContent = "Entrando no sistema...";
+
+        // Redireciona conforme o role
+        setTimeout(() => {
+          if (data.role === "admin") {
+            window.location.href = "index.html";
+          } else {
+            window.location.href = "index.html";
+          }
+        }, 800);
+
+      } catch (e) {
+        spinner.style.display = "none";
+        erro.style.display    = "block";
+        btn.style.display     = "inline-block";
+        status.textContent    = "";
+        console.error("Erro demo:", e);
+      }
+    }
+
+    // Inicia automaticamente
+    window.addEventListener("DOMContentLoaded", fazerLogin);
+  </script>
+</body>
+</html>
