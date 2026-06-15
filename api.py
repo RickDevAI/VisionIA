@@ -16,6 +16,9 @@ import io
 import os
 import re
 
+import secrets
+from email_service import enviar_convite, enviar_recuperacao_senha
+
 # =========================
 # API
 # =========================
@@ -153,6 +156,16 @@ def criar_tabelas():
             top5_classes   TEXT,
             tempo_ms       REAL,
             data_analise   TEXT NOT NULL
+        );
+                          
+        CREATE TABLE IF NOT EXISTS tokens_email (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            token      TEXT UNIQUE NOT NULL,
+            tipo       TEXT NOT NULL,
+            email      TEXT NOT NULL,
+            usado      INTEGER DEFAULT 0,
+            expira_em  TEXT NOT NULL,
+            criado_em  TEXT DEFAULT (datetime('now'))
         );
         """)
 
@@ -1017,3 +1030,161 @@ def admin_historico_global(
         }
         for row in rows
     ]
+
+import secrets
+
+
+# ── MODELS ────────────────────────────────────────────────────────────────────
+
+class ConviteRequest(BaseModel):
+    email: EmailStr
+
+class RecuperarSenhaRequest(BaseModel):
+    email: EmailStr
+
+class RedefinirSenhaRequest(BaseModel):
+    token: str
+    nova_senha: str
+
+
+# ── HELPERS ───────────────────────────────────────────────────────────────────
+
+def criar_token_email(email: str, tipo: str, horas: int = 24) -> str:
+    """Gera e salva um token temporário no banco."""
+    token = secrets.token_urlsafe(32)
+    expira = datetime.utcnow() + timedelta(hours=horas)
+    conn = conectar()
+    try:
+        conn.execute(
+            "INSERT INTO tokens_email (token, tipo, email, expira_em) VALUES (?, ?, ?, ?)",
+            (token, tipo, email.lower(), expira.strftime("%Y-%m-%d %H:%M:%S"))
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return token
+
+def validar_token_email(token: str, tipo: str) -> str:
+    """Valida o token e retorna o e-mail associado."""
+    conn = conectar()
+    try:
+        row = conn.execute(
+            "SELECT email, usado, expira_em FROM tokens_email WHERE token = ? AND tipo = ?",
+            (token, tipo)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if not row:
+        raise HTTPException(status_code=400, detail="Token inválido.")
+    if row["usado"]:
+        raise HTTPException(status_code=400, detail="Token já utilizado.")
+    if datetime.utcnow() > datetime.strptime(row["expira_em"], "%Y-%m-%d %H:%M:%S"):
+        raise HTTPException(status_code=400, detail="Token expirado.")
+    return row["email"]
+
+def marcar_token_usado(token: str):
+    conn = conectar()
+    try:
+        conn.execute("UPDATE tokens_email SET usado = 1 WHERE token = ?", (token,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ── CONVITE ────────────────────────────────────────────────────────
+
+@app.post("/admin/convite", tags=["admin"])
+def admin_enviar_convite(
+    data: ConviteRequest,
+    admin_email: str = Depends(verificar_admin),
+):
+    """Admin envia convite por e-mail para novo usuário (válido 24h)."""
+    # Verifica se já tem conta
+    conn = conectar()
+    try:
+        existente = conn.execute(
+            "SELECT email FROM usuarios WHERE email = ?",
+            (data.email.lower(),)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if existente:
+        raise HTTPException(status_code=400, detail="Este e-mail já possui uma conta.")
+
+    try:
+        from email_service import enviar_convite
+        token = criar_token_email(data.email, "convite", horas=24)
+        conn2 = conectar()
+        try:
+            admin_row = conn2.execute(
+                "SELECT nome FROM usuarios WHERE email = ?", (admin_email,)
+            ).fetchone()
+            nome_admin = admin_row["nome"] if admin_row and admin_row["nome"] else admin_email
+        finally:
+            conn2.close()
+        enviar_convite(data.email, token, nome_admin)
+        return {"msg": f"Convite enviado para {data.email}. Válido por 24 horas."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao enviar e-mail: {str(e)}")
+
+
+@app.get("/convite/validar", tags=["auth"])
+def validar_convite(token: str):
+    """Valida se um token de convite é válido (usado no frontend do cadastro)."""
+    email = validar_token_email(token, "convite")
+    return {"email": email, "valido": True}
+
+
+# ── ECUPERAÇÃO DE SENHA ──────────────────────────────────────────
+
+@app.post("/recuperar-senha", tags=["auth"])
+def solicitar_recuperacao(data: RecuperarSenhaRequest):
+    """Envia e-mail de recuperação de senha."""
+    conn = conectar()
+    try:
+        row = conn.execute(
+            "SELECT nome FROM usuarios WHERE email = ?",
+            (data.email.lower(),)
+        ).fetchone()
+    finally:
+        conn.close()
+
+    if not row:
+        return {"msg": "Se este e-mail estiver cadastrado, você receberá as instruções em breve."}
+
+    try:
+        from email_service import enviar_recuperacao_senha
+        token = criar_token_email(data.email, "recuperacao", horas=1)
+        nome = row["nome"] or data.email
+        enviar_recuperacao_senha(data.email, token, nome)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao enviar e-mail: {str(e)}")
+
+    return {"msg": "Se este e-mail estiver cadastrado, você receberá as instruções em breve."}
+
+
+@app.post("/redefinir-senha", tags=["auth"])
+def redefinir_senha(data: RedefinirSenhaRequest):
+    """Redefine a senha usando token válido."""
+    email = validar_token_email(data.token, "recuperacao")
+
+    if not senha_forte(data.nova_senha):
+        raise HTTPException(
+            status_code=400,
+            detail="Senha fraca. Use maiúscula, minúscula, número e caractere especial."
+        )
+
+    conn = conectar()
+    try:
+        conn.execute(
+            "UPDATE usuarios SET senha = ? WHERE email = ?",
+            (pwd_context.hash(data.nova_senha), email)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    marcar_token_usado(data.token)
+    return {"msg": "Senha redefinida com sucesso. Faça login com sua nova senha."}

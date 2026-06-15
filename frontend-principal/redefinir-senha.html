@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redefinir Senha — VisionIA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--color-bg,#f4f6f9); }
+    .card { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.10); padding:40px 48px; max-width:420px; width:100%; }
+    .logo { display:block; width:64px; margin:0 auto 20px; }
+    h2 { text-align:center; color:#0f2744; margin:0 0 6px; font-size:20px; }
+    .sub { text-align:center; color:#64748b; font-size:13px; margin:0 0 28px; }
+    .input-group { margin-bottom:16px; }
+    .input-group label { display:block; font-size:13px; font-weight:500; color:#374151; margin-bottom:6px; }
+    .input-group input { width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; box-sizing:border-box; }
+    .input-group input:focus { outline:none; border-color:#0f2744; }
+    .btn { width:100%; padding:12px; background:#22c55e; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; margin-top:8px; }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .msg { text-align:center; font-size:13px; margin-top:14px; min-height:20px; }
+    .msg.erro { color:#dc2626; }
+    .msg.ok { color:#16a34a; }
+    .rules { font-size:12px; color:#94a3b8; margin-top:8px; line-height:1.8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="assets/logo.png" alt="VisionIA" class="logo">
+    <h2>Redefinir senha</h2>
+    <p class="sub">Digite sua nova senha abaixo.</p>
+
+    <div class="input-group">
+      <label for="novaSenha">Nova senha</label>
+      <input type="password" id="novaSenha" placeholder="Digite a nova senha">
+    </div>
+    <div class="input-group">
+      <label for="confirmarSenha">Confirmar nova senha</label>
+      <input type="password" id="confirmarSenha" placeholder="Confirme a nova senha">
+    </div>
+
+    <div class="rules">
+      • Mínimo 8 caracteres · Uma maiúscula · Uma minúscula · Um número · Um caractere especial
+    </div>
+
+    <button class="btn" id="btnRedefinir" onclick="redefinir()">Redefinir senha</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+    const token = new URLSearchParams(window.location.search).get("token");
+
+    if (!token) {
+      document.getElementById("msg").className = "msg erro";
+      document.getElementById("msg").textContent = "Link inválido ou expirado.";
+      document.getElementById("btnRedefinir").disabled = true;
+    }
+
+    async function redefinir() {
+      const nova     = document.getElementById("novaSenha").value;
+      const confirmar = document.getElementById("confirmarSenha").value;
+      const msg      = document.getElementById("msg");
+      const btn      = document.getElementById("btnRedefinir");
+
+      msg.className = "msg";
+      msg.textContent = "";
+
+      if (!nova || !confirmar) {
+        msg.className = "msg erro";
+        msg.textContent = "Preencha todos os campos.";
+        return;
+      }
+      if (nova !== confirmar) {
+        msg.className = "msg erro";
+        msg.textContent = "As senhas não coincidem.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Redefinindo...";
+
+      try {
+        const res = await fetch(`${API_URL}/redefinir-senha`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, nova_senha: nova })
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok) {
+          msg.className = "msg ok";
+          msg.textContent = "Senha redefinida! Redirecionando para o login...";
+          setTimeout(() => window.location.href = "login.html", 2000);
+        } else {
+          msg.className = "msg erro";
+          msg.textContent = data.detail || "Erro ao redefinir senha.";
+          btn.disabled = false;
+          btn.textContent = "Redefinir senha";
+        }
+      } catch (e) {
+        msg.className = "msg erro";
+        msg.textContent = "Não foi possível conectar ao servidor.";
+        btn.disabled = false;
+        btn.textContent = "Redefinir senha";
+      }
+    }
+  </script>
+</body>
+</html>

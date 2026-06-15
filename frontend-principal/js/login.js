@@ -53,14 +53,16 @@ function irCadastro() {
   window.location.href = "/cadastro.html";
 }
 
-function esqueciSenha() {
+async function esqueciSenha() {
   const email = prompt("Digite seu e-mail para recuperação:");
-
   if (!email) return;
-
-  alert(
-    "Funcionalidade em construção. Em uma versão futura, o sistema enviará instruções para redefinição de senha."
-  );
+  const res = await fetch(`${API_URL}/recuperar-senha`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+  const data = await res.json().catch(() => ({}));
+  alert(data.msg || "Verifique seu e-mail.");
 }
 
 async function validarSessaoExistente() {
